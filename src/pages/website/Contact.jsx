@@ -10,7 +10,8 @@ const Contact = () => {
         <p className='text-xl text-gray-500 mt-3'>Information with query get</p>
       </div>
       <div className="max-w-6xl mx-auto py-5 px-5">
-        <div className="grid lg:grid-cols-2 gap-10">
+        <div className="grid lg:grid-cols-2 gap-30">
+          {/* query form  */}
           <div className="">
             <div className="shadow-2xl py-5 px-5">
               <form action="" method="post">
@@ -32,6 +33,8 @@ const Contact = () => {
               </form>
             </div>
           </div>
+
+          {/* email, location contact number */}
           <div className="">
             <div className="flex gap-10">
               <div className=""> <FontAwesomeIcon icon={faMailForward} className='text-blue-500 rounded-2xl object-cover border-2 p-4' /></div>
@@ -39,11 +42,15 @@ const Contact = () => {
                 <h6>Email</h6>
                 <p>book@gmail.com</p>
               </div>
+            </div>
+            <div className="flex gap-10 mt-10">
               <div className=""> <FontAwesomeIcon icon={faPhone} className='text-blue-500 rounded-2xl object-cover border-2 p-4' /></div>
               <div className="">
                 <h6>Phone</h6>
                 <p>411-54545-5745</p>
               </div>
+            </div>
+            <div className="flex gap-10 mt-10">
               <div className=""><FontAwesomeIcon icon={faLocation} className='text-blue-500 rounded-2xl object-cover border-2 p-4' /></div>
               <div className="">
                 <h6>Address</h6>
