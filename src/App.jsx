@@ -12,6 +12,12 @@ import Authors from "./pages/website/Authors";
 import Contact from "./pages/website/Contact";
 import Login from "./pages/website/Login";
 import Register from "./pages/website/Register";
+import ForgetPassword from "./pages/website/ForgetPassword";
+import ResetPassword from "./pages/website/ResetPassword";
+import BookDetails from "./pages/website/BookDetails";
+import Abouts from "./pages/website/Abouts";
+import SearchResult from "./pages/website/SearchResult";
+import Page404 from "./pages/website/Page404";
 
 // User Pages
 import UserDashboard from "./pages/user/Dashboard";
@@ -32,6 +38,8 @@ import AdminReviews from "./pages/admin/Reviews";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 
+
+
 const App = () => {
   return (
 
@@ -45,6 +53,12 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/books/:id" element={<BookDetails />} />
+        <Route path="/forget-password" element={<ForgetPassword />} />
+        <Route path="/reset-Password" element={<ResetPassword />} />
+        <Route path="/abouts" element={<Abouts />} />
+        <Route path="/search-result" element={<SearchResult />} />
+        <Route path="/Page404" element={<Page404 />} />
       </Route>
 
       {/* ==================== USER ==================== */}
