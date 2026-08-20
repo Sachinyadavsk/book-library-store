@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,13 +13,46 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import categories from "../../staticValue/categoryData";
 import featuredBooks from "../../staticValue/featureData";
-import bestSellingBooks from "../../staticValue/bestSellBook";
+import bookService from "../../services/bookService";
 import BookCard from "./BookCard";
 import bannerImage1 from "../../assets/banner/banner_home1.jpg";
 
 const Home = () => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const response = await bookService.getBooks();
+        console.log("Books API Response:", response);
+        const bookData =
+          response?.data ||
+          response?.books ||
+          response?.results ||
+          [];
+        setBooks(
+          Array.isArray(bookData)
+            ? bookData
+            : []
+        );
+      } catch (error) {
+        console.error("Get books error:", error);
+        setError(error?.message || "Unable to load books."
+        );
+        setBooks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, []);
 
 
+  console.log('dd',books);
 
   return (
     <div className="bg-white">
@@ -251,9 +284,9 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {bestSellingBooks.map((book) => (
+            {books.map((book) => (
               <BookCard
-                key={book.id}
+                key={book._id}
                 book={book}
               />
             ))}

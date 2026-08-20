@@ -1,56 +1,61 @@
-// ============================================
-// API CONFIGURATION
-// ============================================
+const API_BASE_URL ='http://localhost:8000/api/v2';
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+const api = async (endpoint, options = {}) => {
 
-// ============================================
-// GET AUTH TOKEN
-// ============================================
-const getToken = () => {
-    return localStorage.getItem("token");
-};
+    const url = `${API_BASE_URL}${endpoint}`;
 
-// ============================================
-// COMMON REQUEST FUNCTION
-// ============================================
-const api = async (
-    endpoint,
-    options = {}
-) => {
-    const token = getToken();
-
-    const headers = {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-    };
-
-    // Add token when available
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+    console.log("================================");
+    console.log("API BASE URL:", API_BASE_URL);
+    console.log("API ENDPOINT:", endpoint);
+    console.log("FINAL API URL:", url);
+    console.log("================================");
 
     try {
-        const response = await fetch(
-            `${API_BASE_URL}${endpoint}`,
-            {
-                ...options,
-                headers,
-            }
+
+        const token =
+            localStorage.getItem("token");
+
+        const headers = {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            ...(options.headers || {}),
+        };
+
+        if (token) {
+            headers.Authorization =
+                `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, {
+            ...options,
+            headers,
+        });
+
+        console.log(
+            "API STATUS:",
+            response.status
         );
 
-        // Try to read JSON
-        const data = await response.json().catch(() => null);
+        const text =
+            await response.text();
 
-        // ========================================
-        // API ERROR
-        // ========================================
+        let data = {};
+
+        try {
+            data = text
+                ? JSON.parse(text)
+                : {};
+        } catch {
+            data = {
+                message: text,
+            };
+        }
+
         if (!response.ok) {
+
             throw new Error(
                 data?.message ||
-                `Request failed with status ${response.status}`
+                `HTTP ${response.status}`
             );
         }
 
@@ -63,68 +68,13 @@ const api = async (
             error
         );
 
+        console.error(
+            "FAILED URL:",
+            url
+        );
+
         throw error;
     }
 };
 
-// ============================================
-// GET
-// ============================================
-export const get = (endpoint) => {
-    return api(endpoint, {
-        method: "GET",
-    });
-};
-
-// ============================================
-// POST
-// ============================================
-export const post = (
-    endpoint,
-    data = {}
-) => {
-    return api(endpoint, {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-};
-
-// ============================================
-// PUT
-// ============================================
-export const put = (
-    endpoint,
-    data = {}
-) => {
-    return api(endpoint, {
-        method: "PUT",
-        body: JSON.stringify(data),
-    });
-};
-
-// ============================================
-// PATCH
-// ============================================
-export const patch = (
-    endpoint,
-    data = {}
-) => {
-    return api(endpoint, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-    });
-};
-
-// ============================================
-// DELETE
-// ============================================
-export const remove = (endpoint) => {
-    return api(endpoint, {
-        method: "DELETE",
-    });
-};
-
-// ============================================
-// EXPORT DEFAULT
-// ============================================
 export default api;

@@ -2,231 +2,276 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
-import {
-  STORAGE_KEYS,
-  MAX_CART_QUANTITY,
-} from "../utils/constants";
 
-// ============================================
-// CREATE CONTEXT
-// ============================================
-const CartContext = createContext(null);
+import cartService from "../services/cartService";
+import { useAuth } from "./AuthContext";
 
-// ============================================
-// CART PROVIDER
-// ============================================
+const CartContext = createContext();
+
 export const CartProvider = ({ children }) => {
+  const { user } = useAuth();
 
-  // ============================================
-  // CART STATE
-  // ============================================
-  const [cart, setCart] = useState(() => {
-    try {
-      const storedCart = localStorage.getItem("cart");
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [error, setError] = useState("");
 
-      return storedCart
-        ? JSON.parse(storedCart)
-        : [];
-    } catch (error) {
-      console.error("Failed to load cart:", error);
-      return [];
-    }
-  });
+  // ==========================================
+  // GET CART
+  // ==========================================
 
-  // ============================================
-  // SAVE CART TO LOCAL STORAGE
-  // ============================================
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
-
-    // Notify Navbar / other components
-    window.dispatchEvent(new Event("cartUpdated"));
-  }, [cart]);
-
-  // ============================================
-  // ADD TO CART
-  // ============================================
-  const addToCart = (book) => {
-    setCart((prevCart) => {
-
-      const existingItem = prevCart.find(
-        (item) => item.id === book.id
-      );
-
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === book.id
-            ? {
-              ...item,
-              quantity:
-                Number(item.quantity || 1) + 1,
-            }
-            : item
-        );
-      }
-
-      return [
-        ...prevCart,
-        {
-          id: book.id,
-          title: book.title,
-          author: book.author || "",
-          price: Number(book.price || 0),
-          image: book.image || "",
-          quantity: 1,
-        },
-      ];
-    });
-  };
-
-  // ============================================
-  // REMOVE FROM CART
-  // ============================================
-  const removeFromCart = (id) => {
-    setCart((prevCart) =>
-      prevCart.filter((item) => item.id !== id)
-    );
-  };
-
-  // ============================================
-  // UPDATE QUANTITY
-  // ============================================
-  const updateQuantity = (id, quantity) => {
-
-    const newQuantity = Number(quantity);
-
-    if (newQuantity <= 0) {
-      removeFromCart(id);
+  const loadCart = async () => {
+    if (!user) {
+      setCart([]);
+      setCartCount(0);
       return;
     }
 
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id
-          ? {
-            ...item,
-            quantity: newQuantity,
-          }
-          : item
-      )
-    );
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await cartService.getCart();
+
+      console.log("Cart API Response:", response);
+
+      const data =
+        response?.data ??
+        response?.cart ??
+        response?.items ??
+        response ??
+        [];
+
+      const cartData = Array.isArray(data)
+        ? data
+        : [];
+
+      setCart(cartData);
+
+      const total = cartData.reduce(
+        (sum, item) =>
+          sum + Number(item.quantity || 1),
+        0
+      );
+
+      setCartCount(total);
+    } catch (error) {
+      console.error("Get cart error:", error);
+
+      setCart([]);
+      setCartCount(0);
+
+      setError(
+        error?.message ||
+        "Unable to load cart."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ============================================
-  // INCREASE QUANTITY
-  // ============================================
-  const increaseQuantity = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id
-          ? {
-            ...item,
-            quantity:
-              Number(item.quantity || 1) + 1,
-          }
-          : item
-      )
-    );
+  // ==========================================
+  // LOAD WHEN USER CHANGES
+  // ==========================================
+
+  useEffect(() => {
+    loadCart();
+  }, [user]);
+
+  // ==========================================
+  // ADD TO CART
+  // ==========================================
+
+  const addToCart = async (book) => {
+    if (!user) {
+      return {
+        success: false,
+        requiresLogin: true,
+      };
+    }
+
+    try {
+      setError("");
+
+      const response =
+        await cartService.addToCart({
+          book_id: book.id ?? book._id,
+          quantity: 1,
+        });
+
+      console.log(
+        "Add Cart Response:",
+        response
+      );
+
+      await loadCart();
+
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+
+      return response;
+    } catch (error) {
+      console.error(
+        "Add cart error:",
+        error
+      );
+
+      setError(
+        error?.message ||
+        "Unable to add book to cart."
+      );
+
+      throw error;
+    }
   };
 
-  // ============================================
-  // DECREASE QUANTITY
-  // ============================================
-  const decreaseQuantity = (id) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) =>
-          item.id === id
-            ? {
-              ...item,
-              quantity:
-                Number(item.quantity || 1) - 1,
-            }
-            : item
-        )
-        .filter(
-          (item) => Number(item.quantity) > 0
-        )
+  // ==========================================
+  // INCREASE
+  // ==========================================
+
+  const increaseQuantity = async (bookId) => {
+    const item = cart.find(
+      (item) =>
+        String(item.book_id ?? item.book?.id) ===
+        String(bookId)
     );
+
+    if (!item) return;
+
+    try {
+      await cartService.updateCart(
+        item.id,
+        {
+          quantity:
+            Number(item.quantity || 1) + 1,
+        }
+      );
+
+      await loadCart();
+
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+    } catch (error) {
+      console.error(
+        "Increase quantity error:",
+        error
+      );
+    }
   };
 
-  // ============================================
-  // CLEAR CART
-  // ============================================
-  const clearCart = () => {
-    setCart([]);
+  // ==========================================
+  // DECREASE
+  // ==========================================
+
+  const decreaseQuantity = async (bookId) => {
+    const item = cart.find(
+      (item) =>
+        String(item.book_id ?? item.book?.id) ===
+        String(bookId)
+    );
+
+    if (!item) return;
+
+    const quantity = Number(
+      item.quantity || 1
+    );
+
+    // Remove when quantity becomes zero
+    if (quantity <= 1) {
+      await removeFromCart(item.id);
+      return;
+    }
+
+    try {
+      await cartService.updateCart(
+        item.id,
+        {
+          quantity: quantity - 1,
+        }
+      );
+
+      await loadCart();
+
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+    } catch (error) {
+      console.error(
+        "Decrease quantity error:",
+        error
+      );
+    }
   };
 
-  // ============================================
-  // CART COUNT
-  // ============================================
-  const cartCount = useMemo(() => {
-    return cart.reduce(
-      (total, item) =>
-        total + Number(item.quantity || 1),
-      0
-    );
-  }, [cart]);
+  // ==========================================
+  // REMOVE
+  // ==========================================
 
-  // ============================================
-  // SUBTOTAL
-  // ============================================
-  const cartSubtotal = useMemo(() => {
-    return cart.reduce(
-      (total, item) =>
-        total +
-        Number(item.price || 0) *
-        Number(item.quantity || 1),
-      0
-    );
-  }, [cart]);
+  const removeFromCart = async (cartId) => {
+    try {
+      await cartService.removeFromCart(
+        cartId
+      );
 
-  // ============================================
-  // CART VALUE
-  // ============================================
-  const value = {
-    cart,
+      await loadCart();
 
-    setCart,
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+    } catch (error) {
+      console.error(
+        "Remove cart error:",
+        error
+      );
+    }
+  };
 
-    addToCart,
-    removeFromCart,
+  // ==========================================
+  // CLEAR
+  // ==========================================
 
-    updateQuantity,
-    increaseQuantity,
-    decreaseQuantity,
+  const clearCart = async () => {
+    try {
+      await cartService.clearCart();
 
-    clearCart,
+      setCart([]);
+      setCartCount(0);
 
-    cartCount,
-    cartSubtotal,
-
-    isCartEmpty: cart.length === 0,
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+    } catch (error) {
+      console.error(
+        "Clear cart error:",
+        error
+      );
+    }
   };
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider
+      value={{
+        cart,
+        cartCount,
+        loading,
+        error,
+        addToCart,
+        increaseQuantity,
+        decreaseQuantity,
+        removeFromCart,
+        clearCart,
+        loadCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-// ============================================
-// CUSTOM HOOK
-// ============================================
 export const useCart = () => {
-  const context = useContext(CartContext);
-
-  if (!context) {
-    throw new Error(
-      "useCart must be used inside CartProvider"
-    );
-  }
-
-  return context;
+  return useContext(CartContext);
 };
-
-export default CartContext;

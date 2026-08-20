@@ -1,98 +1,85 @@
-import api from "../services/api";
-
-// ============================================
-// AUTH SERVICE
-// ============================================
+import api from "./api";
 
 const authService = {
 
-    // ========================================
-    // LOGIN
-    // ========================================
-    async login(email, password) {
-        const response = await api("/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-                email,
-                password,
-            }),
-        });
-
-        // Save token
-        if (response?.token) {
-            localStorage.setItem(
-                "token",
-                response.token
-            );
-        }
-
-        // Save user
-        if (response?.user) {
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.user)
-            );
-        }
-
-        return response;
-    },
-
-    // ========================================
+    // ============================================
     // REGISTER
-    // ========================================
+    // ============================================
     async register(userData) {
-        const response = await api("/auth/register", {
+
+        return api("/auth/register", {
             method: "POST",
             body: JSON.stringify(userData),
         });
-
-        return response;
     },
 
-    // ========================================
-    // GET CURRENT USER
-    // ========================================
-    async getCurrentUser() {
-        const response = await api("/auth/me", {
-            method: "GET",
+    // ============================================
+    // LOGIN
+    // ============================================
+    async login(credentials) {
+
+        return api("/auth/login", {
+            method: "POST",
+            body: JSON.stringify(credentials),
         });
-
-        if (response?.user) {
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.user)
-            );
-        }
-
-        return response;
     },
 
-    // ========================================
+    // ============================================
     // LOGOUT
-    // ========================================
+    // ============================================
     async logout() {
 
-        try {
-            await api("/auth/logout", {
-                method: "POST",
-            });
-        } catch (error) {
-            console.error(
-                "Logout API error:",
-                error
-            );
-        }
-
-        // Clear authentication
-        localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+
+        return true;
     },
 
-    // ========================================
-    // GET USER FROM STORAGE
-    // ========================================
+    // ============================================
+    // GET TOKEN
+    // ============================================
+    getToken() {
+
+        return localStorage.getItem("token");
+    },
+
+    // ============================================
+    // SET TOKEN
+    // ============================================
+    setToken(token) {
+
+        if (token) {
+
+            localStorage.setItem(
+                "token",
+                token
+            );
+
+        } else {
+
+            localStorage.removeItem(
+                "token"
+            );
+
+        }
+
+    },
+
+    // ============================================
+    // REMOVE TOKEN
+    // ============================================
+    removeToken() {
+
+        localStorage.removeItem("token");
+    },
+
+    // ============================================
+    // GET USER
+    // ============================================
     getUser() {
+
         try {
+
             const user =
                 localStorage.getItem("user");
 
@@ -101,8 +88,9 @@ const authService = {
                 : null;
 
         } catch (error) {
+
             console.error(
-                "Invalid user data:",
+                "Get user error:",
                 error
             );
 
@@ -110,40 +98,53 @@ const authService = {
         }
     },
 
-    // ========================================
-    // GET TOKEN
-    // ========================================
-    getToken() {
-        return localStorage.getItem("token");
+    // ============================================
+    // SET USER
+    // ============================================
+    setUser(user) {
+
+        if (user) {
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify(user)
+            );
+
+        } else {
+
+            localStorage.removeItem(
+                "user"
+            );
+
+        }
     },
 
-    // ========================================
+    // ============================================
+    // CLEAR AUTH
+    // ============================================
+    clearAuth() {
+
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+    },
+
+    // ============================================
     // CHECK LOGIN
-    // ========================================
-    isLoggedIn() {
-        return !!localStorage.getItem("token");
-    },
+    // ============================================
+    isAuthenticated() {
 
-    // ========================================
-    // CHECK ADMIN
-    // ========================================
-    isAdmin() {
-        const user = this.getUser();
+        const token =
+            this.getToken();
 
-        return (
-            user?.role === "admin" ||
-            user?.isAdmin === true ||
-            user?.userType === "admin"
+        const user =
+            this.getUser();
+
+        return !!(
+            token &&
+            user
         );
     },
 
-    // ========================================
-    // CLEAR AUTH
-    // ========================================
-    clearAuth() {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-    },
 };
 
 export default authService;

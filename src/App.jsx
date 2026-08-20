@@ -21,12 +21,15 @@ import Page404 from "./pages/website/Page404";
 import Cart from "./pages/website/Cart";
 import Wishlist from "./pages/website/Wishlist";
 import Checkout from "./pages/website/Checkout";
+import OrderSuccess from "./pages/website/OrderSuccess";
 
 // User Pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
 import UserOrders from "./pages/user/Orders";
 import BorrowedBooks from "./pages/user/BorrowedBooks";
+import UserCart from "./pages/user/Cart";
+import UserWishlist from "./pages/user/Wishlist";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -39,6 +42,7 @@ import AdminReviews from "./pages/admin/Reviews";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminRoute from "./routes/AdminRoute";
+
 
 
 
@@ -66,14 +70,16 @@ const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-success/:orderId" element={<OrderSuccess />} />
       </Route>
 
       {/* ==================== USER ==================== */}
-      <Route element={<UserLayout />}>
-        <Route path="/user/dashboard" element={<UserDashboard />} />
-        <Route path="/user/profile" element={<UserProfile />} />
-        <Route path="/user/orders" element={<UserOrders />} />
-        <Route path="/user/borrowed-books" element={<BorrowedBooks />} />
+      <Route path="/user" element={<UserLayout />}>
+        <Route path="dashboard" element={<UserDashboard />} />
+        <Route path="profile" element={<UserProfile />} />
+        <Route path="orders" element={<UserOrders />} />
+        <Route path="cart" element={<UserCart />} />
+        <Route path="wishlist" element={<UserWishlist />} />
       </Route>
 
       {/* ======================================

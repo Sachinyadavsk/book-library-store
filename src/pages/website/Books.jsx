@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
@@ -12,10 +11,8 @@ import {
   faCheck,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
-
 import { useCart } from "../../context/CartContext";
-import { useWishlist } from "../../context/WishlistContext";
-
+import { useWishlist } from "../../context/WishlistContext.jsx";
 import bookService from "../../services/bookService";
 import {
   BOOK_CATEGORIES,
@@ -64,13 +61,9 @@ const Books = () => {
   // LOAD BOOKS
   // ============================================
   const loadBooks = async () => {
-
     try {
-
       setLoading(true);
-
       setError("");
-
       const response =
         await bookService.getBooks();
 

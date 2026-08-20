@@ -1,118 +1,42 @@
-import api from "../services/api";
+import api from "./api";
 
 const cartService = {
-
-    // ============================================
-    // GET USER CART
-    // ============================================
-    async getCart() {
+    // Get logged-in user's cart
+    getCart: () => {
         return api("/cart", {
             method: "GET",
         });
     },
 
-    // ============================================
-    // GET CART COUNT
-    // ============================================
-    async getCartCount() {
-        return api("/cart/count", {
-            method: "GET",
-        });
-    },
-
-    // ============================================
-    // ADD ITEM TO CART
-    // ============================================
-    async addToCart(bookId, quantity = 1) {
-
-        if (!bookId) {
-            throw new Error("Book ID is required");
-        }
-
+    // Add book to cart
+    addToCart: (data) => {
         return api("/cart", {
             method: "POST",
-            body: JSON.stringify({
-                book_id: bookId,
-                quantity,
-            }),
+            body: JSON.stringify(data),
         });
     },
 
-    // ============================================
-    // UPDATE QUANTITY
-    // ============================================
-    async updateQuantity(cartItemId, quantity) {
-
-        if (!cartItemId) {
-            throw new Error("Cart item ID is required");
-        }
-
-        if (quantity < 1) {
-            throw new Error(
-                "Quantity must be at least 1"
-            );
-        }
-
-        return api(`/cart/${cartItemId}`, {
+    // Update quantity
+    updateCart: (id, data) => {
+        return api(`/cart/${id}`, {
             method: "PUT",
-            body: JSON.stringify({
-                quantity,
-            }),
+            body: JSON.stringify(data),
         });
     },
 
-    // ============================================
-    // INCREASE QUANTITY
-    // ============================================
-    async increaseQuantity(cartItemId) {
-
-        return api(
-            `/cart/${cartItemId}/increase`,
-            {
-                method: "PATCH",
-            }
-        );
-    },
-
-    // ============================================
-    // DECREASE QUANTITY
-    // ============================================
-    async decreaseQuantity(cartItemId) {
-
-        return api(
-            `/cart/${cartItemId}/decrease`,
-            {
-                method: "PATCH",
-            }
-        );
-    },
-
-    // ============================================
-    // REMOVE CART ITEM
-    // ============================================
-    async removeFromCart(cartItemId) {
-
-        if (!cartItemId) {
-            throw new Error(
-                "Cart item ID is required"
-            );
-        }
-
-        return api(`/cart/${cartItemId}`, {
+    // Remove cart item
+    removeFromCart: (id) => {
+        return api(`/cart/${id}`, {
             method: "DELETE",
         });
     },
 
-    // ============================================
-    // CLEAR CART
-    // ============================================
-    async clearCart() {
-
-        return api("/cart", {
+    // Clear cart
+    clearCart: () => {
+        return api("/cart/clear", {
             method: "DELETE",
         });
     },
-
 };
 
 export default cartService;

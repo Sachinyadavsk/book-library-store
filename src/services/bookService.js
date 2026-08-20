@@ -6,6 +6,7 @@ import api from "../services/api";
 
 const bookService = {
 
+   
     // ============================================
     // GET ALL BOOKS
     // ============================================
@@ -27,7 +28,7 @@ const bookService = {
         const queryString = query.toString();
 
         return api(
-            `/books${queryString ? `?${queryString}` : ""}`,
+            `/book${queryString ? `?${queryString}` : ""}`,
             {
                 method: "GET",
             }

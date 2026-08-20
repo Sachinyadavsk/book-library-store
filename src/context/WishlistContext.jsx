@@ -2,188 +2,191 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 
-// ============================================
-// CREATE CONTEXT
-// ============================================
-const WishlistContext = createContext(null);
+import wishlistService from "../services/wishlistService";
+import { useAuth } from "./AuthContext";
 
-// ============================================
-// WISHLIST PROVIDER
-// ============================================
-export const WishlistProvider = ({ children }) => {
+const WishlistContext = createContext();
 
-  // ============================================
-  // WISHLIST STATE
-  // ============================================
-  const [wishlist, setWishlist] = useState(() => {
+export const WishlistProvider = ({
+  children,
+}) => {
+  const { user } = useAuth();
+
+  const [wishlist, setWishlist] = useState([]);
+  const [wishlistCount, setWishlistCount] =
+    useState(0);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] = useState("");
+
+  // ==========================================
+  // GET WISHLIST
+  // ==========================================
+
+  const loadWishlist = async () => {
+    if (!user) {
+      setWishlist([]);
+      setWishlistCount(0);
+      return;
+    }
+
     try {
-      const storedWishlist =
-        localStorage.getItem("wishlist");
+      setLoading(true);
+      setError("");
 
-      return storedWishlist
-        ? JSON.parse(storedWishlist)
+      const response =
+        await wishlistService.getWishlist();
+
+      console.log(
+        "Wishlist API Response:",
+        response
+      );
+
+      const data =
+        response?.data ??
+        response?.wishlist ??
+        response?.items ??
+        response ??
+        [];
+
+      const wishlistData = Array.isArray(data)
+        ? data
         : [];
+
+      setWishlist(wishlistData);
+      setWishlistCount(
+        wishlistData.length
+      );
     } catch (error) {
       console.error(
-        "Failed to load wishlist:",
+        "Get wishlist error:",
         error
       );
 
-      return [];
+      setWishlist([]);
+      setWishlistCount(0);
+
+      setError(
+        error?.message ||
+        "Unable to load wishlist."
+      );
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  // ============================================
-  // SAVE TO LOCAL STORAGE
-  // ============================================
+  // ==========================================
+  // LOAD WHEN USER CHANGES
+  // ==========================================
+
   useEffect(() => {
-    localStorage.setItem(
-      "wishlist",
-      JSON.stringify(wishlist)
-    );
+    loadWishlist();
+  }, [user]);
 
-    // Notify other components
-    window.dispatchEvent(
-      new Event("wishlistUpdated")
-    );
-  }, [wishlist]);
+  // ==========================================
+  // CHECK WISHLIST
+  // ==========================================
 
-  // ============================================
-  // ADD TO WISHLIST
-  // ============================================
-  const addToWishlist = (book) => {
-    setWishlist((prevWishlist) => {
-
-      const exists = prevWishlist.some(
-        (item) => item.id === book.id
-      );
-
-      // Don't add duplicate
-      if (exists) {
-        return prevWishlist;
-      }
-
-      return [
-        ...prevWishlist,
-        {
-          id: book.id,
-          title: book.title,
-          author: book.author || "",
-          price: Number(book.price || 0),
-          image: book.image || "",
-        },
-      ];
-    });
-  };
-
-  // ============================================
-  // REMOVE FROM WISHLIST
-  // ============================================
-  const removeFromWishlist = (id) => {
-    setWishlist((prevWishlist) =>
-      prevWishlist.filter(
-        (item) => item.id !== id
-      )
+  const isInWishlist = (bookId) => {
+    return wishlist.some(
+      (item) =>
+        String(
+          item.book_id ?? item.book?.id
+        ) === String(bookId)
     );
   };
 
-  // ============================================
-  // TOGGLE WISHLIST
-  // ============================================
-  const toggleWishlist = (book) => {
-    setWishlist((prevWishlist) => {
+  // ==========================================
+  // ADD / REMOVE
+  // ==========================================
 
-      const exists = prevWishlist.some(
-        (item) => item.id === book.id
-      );
+  const toggleWishlist = async (book) => {
+    if (!user) {
+      return {
+        success: false,
+        requiresLogin: true,
+      };
+    }
 
-      if (exists) {
-        return prevWishlist.filter(
-          (item) => item.id !== book.id
+    const bookId =
+      book.id ?? book._id;
+
+    const existingItem = wishlist.find(
+      (item) =>
+        String(
+          item.book_id ?? item.book?.id
+        ) === String(bookId)
+    );
+
+    try {
+      setError("");
+
+      // ======================================
+      // REMOVE
+      // ======================================
+
+      if (existingItem) {
+        await wishlistService.removeFromWishlist(
+          existingItem.id
         );
       }
 
-      return [
-        ...prevWishlist,
-        {
-          id: book.id,
-          title: book.title,
-          author: book.author || "",
-          price: Number(book.price || 0),
-          image: book.image || "",
-        },
-      ];
-    });
-  };
+      // ======================================
+      // ADD
+      // ======================================
 
-  // ============================================
-  // CHECK IF BOOK IS IN WISHLIST
-  // ============================================
-  const isInWishlist = (id) => {
-    return wishlist.some(
-      (item) => item.id === id
-    );
-  };
+      else {
+        await wishlistService.addToWishlist({
+          book_id: bookId,
+        });
+      }
 
-  // ============================================
-  // CLEAR WISHLIST
-  // ============================================
-  const clearWishlist = () => {
-    setWishlist([]);
-  };
+      await loadWishlist();
 
-  // ============================================
-  // WISHLIST COUNT
-  // ============================================
-  const wishlistCount = useMemo(() => {
-    return wishlist.length;
-  }, [wishlist]);
+      window.dispatchEvent(
+        new Event("wishlistUpdated")
+      );
 
-  // ============================================
-  // CONTEXT VALUE
-  // ============================================
-  const value = {
-    wishlist,
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error(
+        "Wishlist error:",
+        error
+      );
 
-    setWishlist,
+      setError(
+        error?.message ||
+        "Unable to update wishlist."
+      );
 
-    addToWishlist,
-    removeFromWishlist,
-    toggleWishlist,
-
-    isInWishlist,
-
-    clearWishlist,
-
-    wishlistCount,
-
-    isWishlistEmpty: wishlist.length === 0,
+      throw error;
+    }
   };
 
   return (
-    <WishlistContext.Provider value={value}>
+    <WishlistContext.Provider
+      value={{
+        wishlist,
+        wishlistCount,
+        loading,
+        error,
+        isInWishlist,
+        toggleWishlist,
+        loadWishlist,
+      }}
+    >
       {children}
     </WishlistContext.Provider>
   );
 };
 
-// ============================================
-// CUSTOM HOOK
-// ============================================
 export const useWishlist = () => {
-  const context = useContext(WishlistContext);
-
-  if (!context) {
-    throw new Error(
-      "useWishlist must be used inside WishlistProvider"
-    );
-  }
-
-  return context;
+  return useContext(WishlistContext);
 };
-
-export default WishlistContext;

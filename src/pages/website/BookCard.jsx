@@ -10,14 +10,14 @@ const BookCard = ({ book }) => {
         isInWishlist,
     } = useWishlist();
 
-    const favorite = isInWishlist(book.id);
+    const favorite = isInWishlist(book._id);
     return (
         <div className="group min-w-0">
 
             {/* Image */}
             <div className="relative bg-gray-100 rounded-xl overflow-hidden">
 
-                <Link to={`/books/${book.id}`}>
+                <Link to={`/books/${book._id}`}>
                     <img
                         src={book.image}
                         alt={book.title}
@@ -46,7 +46,7 @@ const BookCard = ({ book }) => {
                     {book.author}
                 </p>
 
-                <Link to={`/books/${book.id}`}>
+                <Link to={`/books/${book._id}`}>
                     <h3 className="mt-1 text-sm font-semibold text-gray-800 truncate hover:text-blue-600">
                         {book.title}
                     </h3>
