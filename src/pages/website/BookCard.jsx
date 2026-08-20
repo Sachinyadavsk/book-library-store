@@ -2,8 +2,15 @@ import { faHeart, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'
 import { Link } from 'react-router-dom';
+import { useWishlist } from "../../context/WishlistContext"
 
 const BookCard = ({ book }) => {
+    const {
+        toggleWishlist,
+        isInWishlist,
+    } = useWishlist();
+
+    const favorite = isInWishlist(book.id);
     return (
         <div className="group min-w-0">
 
@@ -21,9 +28,13 @@ const BookCard = ({ book }) => {
                 {/* Wishlist */}
                 <button
                     type="button"
-                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-500 transition"
+                    onClick={() => toggleWishlist(book)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition ${favorite
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+                        }`}
                 >
-                    <FontAwesomeIcon icon={faHeart} className="text-xs" />
+                    <FontAwesomeIcon icon={faHeart} />
                 </button>
 
             </div>

@@ -18,12 +18,13 @@ import BookDetails from "./pages/website/BookDetails";
 import Abouts from "./pages/website/Abouts";
 import SearchResult from "./pages/website/SearchResult";
 import Page404 from "./pages/website/Page404";
+import Cart from "./pages/website/Cart";
+import Wishlist from "./pages/website/Wishlist";
+import Checkout from "./pages/website/Checkout";
 
 // User Pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
-import UserCart from "./pages/user/Cart";
-import UserWishlist from "./pages/user/Wishlist";
 import UserOrders from "./pages/user/Orders";
 import BorrowedBooks from "./pages/user/BorrowedBooks";
 
@@ -37,6 +38,9 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
+import AdminRoute from "./routes/AdminRoute";
+
+
 
 
 
@@ -59,30 +63,35 @@ const App = () => {
         <Route path="/abouts" element={<Abouts />} />
         <Route path="/search-result" element={<SearchResult />} />
         <Route path="/Page404" element={<Page404 />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Route>
 
       {/* ==================== USER ==================== */}
       <Route element={<UserLayout />}>
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/profile" element={<UserProfile />} />
-        <Route path="/user/cart" element={<UserCart />} />
-        <Route path="/user/wishlist" element={<UserWishlist />} />
         <Route path="/user/orders" element={<UserOrders />} />
         <Route path="/user/borrowed-books" element={<BorrowedBooks />} />
       </Route>
 
-
-      {/* ==================== ADMIN ==================== */}
-      <Route element={<AdminLayout />}>
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/books" element={<AdminBooks />} />
-        <Route path="/admin/authors" element={<AdminAuthors />} />
-        <Route path="/admin/categories" element={<AdminCategories />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/reports" element={<AdminReports />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+      {/* ======================================
+                ADMIN PROTECTED ROUTES
+            ====================================== */}
+      <Route element={<AdminRoute />}>
+        {/* ==================== ADMIN ==================== */}
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/books" element={<AdminBooks />} />
+          <Route path="/admin/authors" element={<AdminAuthors />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+        </Route>
       </Route>
 
       {/* ==================== 404 ==================== */}

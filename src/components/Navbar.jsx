@@ -1,8 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useWishlist } from "../context/WishlistContext";
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
+    const { wishlistCount } = useWishlist();
+
+    // updateCartCount
+    const updateCartCount = () => {
+        const cart =
+            JSON.parse(localStorage.getItem("cart")) || [];
+
+        const totalQuantity = cart.reduce(
+            (total, item) => total + (Number(item.quantity) || 1),
+            0
+        );
+
+        setCartCount(totalQuantity);
+    };
+
+    useEffect(() => {
+        updateCartCount();
+
+        window.addEventListener("cartUpdated", updateCartCount);
+
+        return () => {
+            window.removeEventListener(
+                "cartUpdated",
+                updateCartCount
+            );
+        };
+    }, []);
 
     const menuItems = [
         { name: "Home", path: "/" },
@@ -50,22 +79,34 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center gap-3">
 
                         {/* Cart */}
+
                         <Link
-                            to="/user/cart"
+                            to="/cart"
                             className="relative p-2 text-gray-700 hover:text-blue-600"
                         >
                             🛒
-                            <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                                0
-                            </span>
+
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">
+                                    {cartCount > 99 ? "99+" : cartCount}
+                                </span>
+                            )}
                         </Link>
 
                         {/* Wishlist */}
                         <Link
-                            to="/user/wishlist"
-                            className="p-2 text-gray-700 hover:text-red-500"
+                            to="/wishlist"
+                            className="relative p-2 text-gray-700 hover:text-red-500"
                         >
                             ❤️
+
+                            {wishlistCount > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">
+                                    {wishlistCount > 99
+                                        ? "99+"
+                                        : wishlistCount}
+                                </span>
+                            )}
                         </Link>
 
                         {/* Login */}
@@ -123,19 +164,31 @@ const Navbar = () => {
                             <div className="border-t pt-3 mt-2">
 
                                 <Link
-                                    to="/user/cart"
+                                    to="/cart"
                                     onClick={() => setIsOpen(false)}
                                     className="block px-4 py-3 text-gray-700"
                                 >
                                     🛒 Cart
+                                    {cartCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">
+                                            {cartCount > 99 ? "99+" : cartCount}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 <Link
-                                    to="/user/wishlist"
+                                    to="/wishlist"
                                     onClick={() => setIsOpen(false)}
                                     className="block px-4 py-3 text-gray-700"
                                 >
                                     ❤️ Wishlist
+                                    {wishlistCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">
+                                            {wishlistCount > 99
+                                                ? "99+"
+                                                : wishlistCount}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 <Link
