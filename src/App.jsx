@@ -22,6 +22,7 @@ import Cart from "./pages/website/Cart";
 import Wishlist from "./pages/website/Wishlist";
 import Checkout from "./pages/website/Checkout";
 import OrderSuccess from "./pages/website/OrderSuccess";
+import AdminLogin from "./pages/website/AdminLogin";
 
 // User Pages
 import UserDashboard from "./pages/user/Dashboard";
@@ -42,8 +43,9 @@ import AdminReviews from "./pages/admin/Reviews";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminRoute from "./routes/AdminRoute";
-
-
+import AdminProfile from "./pages/admin/Profile";
+import CreateBook from "./pages/admin/Books/CreateBook";
+import EditBook from "./pages/admin/Books/EditBook";
 
 
 
@@ -71,6 +73,7 @@ const App = () => {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
       </Route>
 
       {/* ==================== USER ==================== */}
@@ -97,6 +100,9 @@ const App = () => {
           <Route path="/admin/reviews" element={<AdminReviews />} />
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/books/create" element={<CreateBook />} />
+          <Route path="/admin/books/edit/:id" element={<EditBook />} />
         </Route>
       </Route>
 

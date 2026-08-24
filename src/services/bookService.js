@@ -45,7 +45,7 @@ const bookService = {
             );
         }
 
-        return api(`/books/${id}`, {
+        return api(`/book/${id}`, {
             method: "GET",
         });
     },
@@ -87,7 +87,7 @@ const bookService = {
         }
 
         return api(
-            `/books/author/${authorId}`,
+            `/book/author/${authorId}`,
             {
                 method: "GET",
             }
@@ -99,7 +99,7 @@ const bookService = {
     // ============================================
     async getFeaturedBooks() {
         return api(
-            "/books/featured",
+            "/book/featured",
             {
                 method: "GET",
             }
@@ -111,7 +111,7 @@ const bookService = {
     // ============================================
     async getLatestBooks() {
         return api(
-            "/books/latest",
+            "/book/latest",
             {
                 method: "GET",
             }
@@ -128,7 +128,7 @@ const bookService = {
             );
         }
 
-        return api("/books", {
+        return api("/book", {
             method: "POST",
             body: JSON.stringify(bookData),
         });
@@ -144,7 +144,7 @@ const bookService = {
             );
         }
 
-        return api(`/books/${id}`, {
+        return api(`/book/${id}`, {
             method: "PUT",
             body: JSON.stringify(bookData),
         });
@@ -160,7 +160,7 @@ const bookService = {
             );
         }
 
-        return api(`/books/${id}`, {
+        return api(`/book/${id}`, {
             method: "DELETE",
         });
     },
@@ -175,7 +175,7 @@ const bookService = {
             );
         }
 
-        return api(`/books/${id}/stock`, {
+        return api(`/book/${id}/stock`, {
             method: "PATCH",
             body: JSON.stringify({
                 stock,
@@ -193,7 +193,7 @@ const bookService = {
             );
         }
 
-        return api(`/books/${id}/status`, {
+        return api(`/book/${id}/status`, {
             method: "PATCH",
             body: JSON.stringify({
                 status,
