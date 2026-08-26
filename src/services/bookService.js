@@ -6,7 +6,7 @@ import api from "../services/api";
 
 const bookService = {
 
-   
+
     // ============================================
     // GET ALL BOOKS
     // ============================================
@@ -123,14 +123,14 @@ const bookService = {
     // ============================================
     async createBook(bookData) {
         if (!bookData) {
-            throw new Error(
-                "Book data is required"
-            );
+            throw new Error("Book data is required");
         }
+
+        console.log("CREATE BOOK FORMDATA:", bookData);
 
         return api("/book", {
             method: "POST",
-            body: JSON.stringify(bookData),
+            body: bookData,
         });
     },
 

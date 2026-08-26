@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     FaBook,
-    FaImage,
     FaSave,
     FaArrowLeft,
     FaSpinner,
@@ -31,16 +30,12 @@ const CreateBook = () => {
         publisher: "",
         publishedYear: "",
         pages: "",
-        image: "",
+        image: null,
         description: "",
         slug: "",
         featured: false,
         status: "Available",
     });
-
-    // ==========================================
-    // OTHER STATES
-    // ==========================================
 
     const [authors, setAuthors] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -83,14 +78,14 @@ const CreateBook = () => {
                 []
             );
         } catch (error) {
-            console.log(error);
+            console.error("Load data error:", error);
         } finally {
             setPageLoading(false);
         }
     };
 
     // ==========================================
-    // INPUT CHANGE
+    // IMAGE CHANGE
     // ==========================================
 
     const changeFileHandler = (e) => {
@@ -100,12 +95,14 @@ const CreateBook = () => {
             return;
         }
 
-        // Image type validation
+        // Image validation
         if (!file.type.startsWith("image/")) {
             setErrors((prev) => ({
                 ...prev,
                 image: "Only image files are allowed",
             }));
+
+            e.target.value = "";
             return;
         }
 
@@ -115,10 +112,18 @@ const CreateBook = () => {
                 ...prev,
                 image: "Image must be less than 5MB",
             }));
+
+            e.target.value = "";
             return;
         }
 
-        // Save File object
+        console.log("SELECTED IMAGE:", {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            file,
+        });
+
         setFormData((prev) => ({
             ...prev,
             image: file,
@@ -130,9 +135,36 @@ const CreateBook = () => {
         }));
     };
 
+    // ==========================================
+    // REMOVE IMAGE
+    // ==========================================
+
+    const removeImage = () => {
+        setFormData((prev) => ({
+            ...prev,
+            image: null,
+        }));
+
+        const input = document.querySelector(
+            'input[name="image"]'
+        );
+
+        if (input) {
+            input.value = "";
+        }
+    };
+
+    // ==========================================
+    // INPUT CHANGE
+    // ==========================================
+
     const handleChange = (e) => {
-        const { name, value, type, checked } =
-            e.target;
+        const {
+            name,
+            value,
+            type,
+            checked,
+        } = e.target;
 
         setFormData((prev) => ({
             ...prev,
@@ -170,37 +202,25 @@ const CreateBook = () => {
                 "Category is required";
         }
 
-        if (!formData.price) {
-            newErrors.price =
-                "Price is required";
-        }
-
-        if (!formData.stock) {
-            newErrors.stock =
-                "Stock is required";
-        }
-
         if (
-            formData.price &&
+            formData.price === "" ||
             Number(formData.price) < 0
         ) {
             newErrors.price =
-                "Invalid price";
+                "Valid price is required";
         }
 
         if (
-            formData.stock &&
+            formData.stock === "" ||
             Number(formData.stock) < 0
         ) {
             newErrors.stock =
-                "Invalid stock";
+                "Valid stock is required";
         }
 
         setErrors(newErrors);
 
-        return (
-            Object.keys(newErrors).length === 0
-        );
+        return Object.keys(newErrors).length === 0;
     };
 
     // ==========================================
@@ -210,20 +230,142 @@ const CreateBook = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validate()) return;
+        if (!validate()) {
+            return;
+        }
 
         try {
             setLoading(true);
+            setSuccess("");
 
-            const payload = {
-                ...formData,
-                price: Number(formData.price),
-                stock: Number(formData.stock),
-                pages: Number(formData.pages || 0),
-            };
+            // ==========================================
+            // CREATE FORMDATA
+            // ==========================================
 
-            await bookService.createBook(
-                payload
+            const data = new FormData();
+
+            data.append(
+                "title",
+                formData.title
+            );
+
+            data.append(
+                "author",
+                formData.author
+            );
+
+            data.append(
+                "category",
+                formData.category
+            );
+
+            data.append(
+                "isbn",
+                formData.isbn
+            );
+
+            data.append(
+                "price",
+                String(Number(formData.price))
+            );
+
+            data.append(
+                "stock",
+                String(Number(formData.stock))
+            );
+
+            data.append(
+                "language",
+                formData.language
+            );
+
+            data.append(
+                "publisher",
+                formData.publisher
+            );
+
+            data.append(
+                "publishedYear",
+                formData.publishedYear
+            );
+
+            data.append(
+                "pages",
+                String(Number(formData.pages || 0))
+            );
+
+            data.append(
+                "description",
+                formData.description
+            );
+
+            data.append(
+                "slug",
+                formData.slug
+            );
+
+            data.append(
+                "featured",
+                String(formData.featured)
+            );
+
+            data.append(
+                "status",
+                formData.status
+            );
+
+            // ==========================================
+            // IMPORTANT: IMAGE
+            // ==========================================
+
+            if (formData.image instanceof File) {
+                data.append(
+                    "image",
+                    formData.image
+                );
+            }
+
+            // ==========================================
+            // DEBUG FORMDATA
+            // ==========================================
+
+            console.log(
+                "========== BOOK FORMDATA =========="
+            );
+
+            for (const [key, value] of data.entries()) {
+                if (value instanceof File) {
+                    console.log("IMAGE:", {
+                        field: key,
+                        name: value.name,
+                        type: value.type,
+                        size: value.size,
+                        file: value,
+                    });
+                } else {
+                    console.log(
+                        key,
+                        value
+                    );
+                }
+            }
+
+            console.log(
+                "==================================="
+            );
+
+            // ==========================================
+            // API
+            // ==========================================
+
+            const response =
+                await bookService.createBook(
+                    data
+                );
+
+            console.log(
+                "CREATE BOOK RESPONSE:",
+                response
             );
 
             setSuccess(
@@ -233,11 +375,15 @@ const CreateBook = () => {
             setTimeout(() => {
                 navigate("/admin/books");
             }, 1500);
+
         } catch (error) {
-            console.error(error);
+            console.error(
+                "CREATE BOOK ERROR:",
+                error
+            );
 
             alert(
-                error.message ||
+                error?.message ||
                 "Unable to create book"
             );
         } finally {
@@ -261,7 +407,7 @@ const CreateBook = () => {
             publisher: "",
             publishedYear: "",
             pages: "",
-            image: "",
+            image: null,
             description: "",
             slug: "",
             featured: false,
@@ -269,6 +415,15 @@ const CreateBook = () => {
         });
 
         setErrors({});
+        setSuccess("");
+
+        const input = document.querySelector(
+            'input[name="image"]'
+        );
+
+        if (input) {
+            input.value = "";
+        }
     };
 
     // ==========================================
@@ -278,11 +433,15 @@ const CreateBook = () => {
     if (pageLoading) {
         return (
             <div className="space-y-6 animate-pulse">
-                <div className="h-10 bg-gray-200 rounded"></div>
-                <div className="bg-white rounded-xl h-[700px]"></div>
+                <div className="h-10 bg-gray-200 rounded" />
+                <div className="bg-white rounded-xl h-[700px]" />
             </div>
         );
     }
+
+    // ==========================================
+    // UI
+    // ==========================================
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -291,13 +450,16 @@ const CreateBook = () => {
 
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
+
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                         <FaBook />
                     </div>
+
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800">
                             Add Book
                         </h1>
+
                         <p className="text-gray-500">
                             Create a new book
                         </p>
@@ -307,11 +469,10 @@ const CreateBook = () => {
 
                 <Link
                     to="/admin/books"
-                    className="px-4 py-2 border rounded-lg"
+                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                 >
                     <FaArrowLeft />
                 </Link>
-
             </div>
 
             {/* Success */}
@@ -327,11 +488,10 @@ const CreateBook = () => {
             <form
                 onSubmit={handleSubmit}
                 className="bg-white rounded-2xl shadow border p-6"
+                encType="multipart/form-data"
             >
 
                 <div className="grid md:grid-cols-2 gap-5">
-
-                    {/* Title */}
 
                     <Input
                         label="Book Title"
@@ -341,8 +501,6 @@ const CreateBook = () => {
                         error={errors.title}
                     />
 
-                    {/* Title */}
-
                     <Input
                         label="Slug"
                         name="slug"
@@ -351,17 +509,12 @@ const CreateBook = () => {
                         error={errors.slug}
                     />
 
-
-                    {/* ISBN */}
-
                     <Input
                         label="ISBN"
                         name="isbn"
                         value={formData.isbn}
                         onChange={handleChange}
                     />
-
-                    {/* Author */}
 
                     <Select
                         label="Author"
@@ -372,8 +525,6 @@ const CreateBook = () => {
                         options={authors}
                     />
 
-                    {/* Category */}
-
                     <Select
                         label="Category"
                         name="category"
@@ -383,29 +534,25 @@ const CreateBook = () => {
                         options={categories}
                     />
 
-                    {/* Price */}
-
                     <Input
                         label="Price"
                         name="price"
                         type="number"
+                        min="0"
                         value={formData.price}
                         onChange={handleChange}
                         error={errors.price}
                     />
 
-                    {/* Stock */}
-
                     <Input
                         label="Stock"
                         name="stock"
                         type="number"
+                        min="0"
                         value={formData.stock}
                         onChange={handleChange}
                         error={errors.stock}
                     />
-
-                    {/* Publisher */}
 
                     <Input
                         label="Publisher"
@@ -414,8 +561,6 @@ const CreateBook = () => {
                         onChange={handleChange}
                     />
 
-                    {/* Language */}
-
                     <Input
                         label="Language"
                         name="language"
@@ -423,17 +568,14 @@ const CreateBook = () => {
                         onChange={handleChange}
                     />
 
-                    {/* Pages */}
-
                     <Input
                         label="Pages"
                         name="pages"
                         type="number"
+                        min="0"
                         value={formData.pages}
                         onChange={handleChange}
                     />
-
-                    {/* Year */}
 
                     <Input
                         label="Published Year"
@@ -443,8 +585,10 @@ const CreateBook = () => {
                         onChange={handleChange}
                     />
 
-                    {/* image */}
+                    {/* IMAGE */}
+
                     <div className="md:col-span-2">
+
                         <label className="font-medium text-gray-700">
                             Book Image
                         </label>
@@ -455,8 +599,8 @@ const CreateBook = () => {
                             accept="image/jpeg,image/png,image/webp"
                             onChange={changeFileHandler}
                             className={`w-full mt-2 p-3 border rounded-lg bg-white ${errors.image
-                                ? "border-red-500"
-                                : "border-gray-300"
+                                    ? "border-red-500"
+                                    : "border-gray-300"
                                 }`}
                         />
 
@@ -466,26 +610,46 @@ const CreateBook = () => {
                             </p>
                         )}
 
-                        {formData.image && (
-                            <div className="mt-3">
-                                <p className="text-sm text-gray-500 mb-2">
-                                    Selected image:
-                                </p>
+                        {/* IMAGE PREVIEW */}
+
+                        {formData.image instanceof File && (
+                            <div className="mt-4 relative w-40">
 
                                 <img
-                                    src={URL.createObjectURL(formData.image)}
+                                    src={URL.createObjectURL(
+                                        formData.image
+                                    )}
                                     alt="Book preview"
-                                    className="w-32 h-40 object-cover rounded-lg border"
+                                    className="w-40 h-52 object-cover rounded-lg border"
                                 />
 
-                                <p className="text-xs text-gray-500 mt-2">
+                                <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center"
+                                >
+                                    <FaTimes size={12} />
+                                </button>
+
+                                <p className="text-xs text-gray-500 mt-2 break-all">
                                     {formData.image.name}
                                 </p>
+
+                                <p className="text-xs text-gray-400">
+                                    {(
+                                        formData.image.size /
+                                        1024 /
+                                        1024
+                                    ).toFixed(2)}{" "}
+                                    MB
+                                </p>
+
                             </div>
                         )}
+
                     </div>
 
-                    {/* Description */}
+                    {/* DESCRIPTION */}
 
                     <div className="md:col-span-2">
 
@@ -505,7 +669,7 @@ const CreateBook = () => {
 
                 </div>
 
-                {/* Featured */}
+                {/* FEATURED */}
 
                 <div className="mt-5 flex items-center gap-3">
 
@@ -522,27 +686,32 @@ const CreateBook = () => {
 
                 </div>
 
-                {/* Buttons */}
+                {/* BUTTONS */}
 
                 <div className="mt-8 flex gap-3">
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg flex items-center gap-2"
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
                     >
                         {loading ? (
-                            <FaSpinner className="animate-spin" />
+                            <>
+                                <FaSpinner className="animate-spin" />
+                                Saving...
+                            </>
                         ) : (
-                            <FaSave />
+                            <>
+                                <FaSave />
+                                Save Book
+                            </>
                         )}
-
-                        Save Book
                     </button>
 
                     <button
                         type="button"
                         onClick={handleReset}
+                        disabled={loading}
                         className="px-6 py-3 border rounded-lg"
                     >
                         Reset
@@ -551,13 +720,12 @@ const CreateBook = () => {
                 </div>
 
             </form>
-
         </div>
     );
 };
 
 // ==========================================
-// INPUT COMPONENT
+// INPUT
 // ==========================================
 
 const Input = ({
@@ -573,8 +741,8 @@ const Input = ({
         <input
             {...props}
             className={`w-full mt-2 p-3 border rounded-lg ${error
-                ? "border-red-500"
-                : "border-gray-300"
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
         />
 
@@ -587,12 +755,12 @@ const Input = ({
 );
 
 // ==========================================
-// SELECT COMPONENT
+// SELECT
 // ==========================================
 
 const Select = ({
     label,
-    options,
+    options = [],
     error,
     ...props
 }) => (
@@ -604,8 +772,8 @@ const Select = ({
         <select
             {...props}
             className={`w-full mt-2 p-3 border rounded-lg ${error
-                ? "border-red-500"
-                : "border-gray-300"
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
         >
             <option value="">
@@ -614,12 +782,8 @@ const Select = ({
 
             {options.map((item) => (
                 <option
-                    key={
-                        item._id || item.id
-                    }
-                    value={
-                        item._id || item.id
-                    }
+                    key={item._id || item.id}
+                    value={item._id || item.id}
                 >
                     {item.name || item.title}
                 </option>

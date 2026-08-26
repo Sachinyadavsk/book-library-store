@@ -19,7 +19,7 @@ const BookCard = ({ book }) => {
 
                 <Link to={`/books/${book._id}`}>
                     <img
-                        src={book.image}
+                        src={book.images?.[0]}
                         alt={book.title}
                         className="w-full h-52 sm:h-60 object-cover group-hover:scale-105 transition duration-500"
                     />

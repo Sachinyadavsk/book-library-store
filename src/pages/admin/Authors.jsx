@@ -23,43 +23,17 @@ import {
 import authorService from "../../services/authorService";
 
 const Authors = () => {
-
-  // ============================================
-  // STATE
-  // ============================================
-
   const [authors, setAuthors] = useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [deleteLoading, setDeleteLoading] =
-    useState(null);
-
-  const [statusLoading, setStatusLoading] =
-    useState(null);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
-  const [search, setSearch] =
-    useState("");
-
-  const [statusFilter, setStatusFilter] =
-    useState("all");
-
-  const [modalOpen, setModalOpen] =
-    useState(false);
-
-  const [editingAuthor, setEditingAuthor] =
-    useState(null);
-
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingAuthor, setEditingAuthor] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -68,12 +42,9 @@ const Authors = () => {
     status: "active",
   });
 
-  const [formErrors, setFormErrors] =
-    useState({});
+  const [formErrors, setFormErrors] = useState({});
 
-  // ============================================
   // LOAD AUTHORS
-  // ============================================
 
   useEffect(() => {
     loadAuthors();
@@ -83,37 +54,19 @@ const Authors = () => {
     try {
       setLoading(true);
       setError("");
-
-      const response =
-        await authorService.getAuthors();
-
-      setAuthors(
-        normalizeAuthors(response)
-      );
-
+      const response = await authorService.getAuthors();
+      setAuthors(normalizeAuthors(response));
     } catch (err) {
-      console.error(
-        "Author API Error:",
-        err
-      );
-
-      setError(
-        err?.message ||
-        "Unable to load authors."
-      );
+      console.error("Author API Error:", err);
+      setError(err?.message || "Unable to load authors.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================================
+
   // NORMALIZE RESPONSE
-  // ============================================
-
-  const normalizeAuthors = (
-    response
-  ) => {
-
+  const normalizeAuthors = (response) => {
     if (Array.isArray(response)) {
       return response;
     }
@@ -122,27 +75,19 @@ const Authors = () => {
       return response.data;
     }
 
-    if (
-      Array.isArray(response?.authors)
-    ) {
+    if (Array.isArray(response?.authors)) {
       return response.authors;
     }
 
-    if (
-      Array.isArray(
-        response?.data?.authors
-      )
-    ) {
+    if (Array.isArray(response?.data?.authors)) {
       return response.data.authors;
     }
 
     return [];
   };
 
-  // ============================================
-  // AUTHOR ID
-  // ============================================
 
+  // AUTHOR ID
   const getAuthorId = (author) => {
     return (
       author?._id ||
@@ -150,10 +95,8 @@ const Authors = () => {
     );
   };
 
-  // ============================================
-  // AUTHOR NAME
-  // ============================================
 
+  // AUTHOR NAME
   const getAuthorName = (author) => {
     return (
       author?.name ||
@@ -164,9 +107,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // AUTHOR BIO
-  // ============================================
+
 
   const getBio = (author) => {
     return (
@@ -176,9 +119,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // AUTHOR EMAIL
-  // ============================================
+
 
   const getEmail = (author) => {
     return (
@@ -187,9 +130,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // AUTHOR COUNTRY
-  // ============================================
+
 
   const getCountry = (author) => {
     return (
@@ -199,9 +142,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // AUTHOR STATUS
-  // ============================================
+
 
   const isActive = (author) => {
 
@@ -227,9 +170,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // FILTER AUTHORS
-  // ============================================
+
 
   const filteredAuthors =
     useMemo(() => {
@@ -296,9 +239,9 @@ const Authors = () => {
       statusFilter,
     ]);
 
-  // ============================================
+
   // STATISTICS
-  // ============================================
+
 
   const totalAuthors =
     authors.length;
@@ -312,9 +255,9 @@ const Authors = () => {
     totalAuthors -
     activeAuthors;
 
-  // ============================================
+
   // OPEN CREATE
-  // ============================================
+
 
   const openCreateModal = () => {
 
@@ -334,9 +277,9 @@ const Authors = () => {
     setModalOpen(true);
   };
 
-  // ============================================
+
   // OPEN EDIT
-  // ============================================
+
 
   const openEditModal = (
     author
@@ -376,9 +319,9 @@ const Authors = () => {
     setModalOpen(true);
   };
 
-  // ============================================
+
   // CLOSE MODAL
-  // ============================================
+
 
   const closeModal = () => {
 
@@ -389,9 +332,9 @@ const Authors = () => {
     setFormErrors({});
   };
 
-  // ============================================
+
   // FORM CHANGE
-  // ============================================
+
 
   const handleChange = (e) => {
 
@@ -415,9 +358,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // VALIDATION
-  // ============================================
+
 
   const validateForm = () => {
 
@@ -518,9 +461,9 @@ const Authors = () => {
     );
   };
 
-  // ============================================
+
   // EXTRACT AUTHOR
-  // ============================================
+
 
   const extractAuthor = (
     response
@@ -557,9 +500,9 @@ const Authors = () => {
     return null;
   };
 
-  // ============================================
+
   // CREATE / UPDATE
-  // ============================================
+
 
   const handleSubmit = async (e) => {
 
@@ -684,9 +627,9 @@ const Authors = () => {
     }
   };
 
-  // ============================================
+
   // DELETE
-  // ============================================
+
 
   const handleDelete = async (
     author
@@ -755,9 +698,9 @@ const Authors = () => {
     }
   };
 
-  // ============================================
+
   // STATUS TOGGLE
-  // ============================================
+
 
   const handleStatusToggle = async (
     author
@@ -815,9 +758,9 @@ const Authors = () => {
     }
   };
 
-  // ============================================
+
   // LOADING
-  // ============================================
+
 
   if (loading) {
 
@@ -854,9 +797,9 @@ const Authors = () => {
     );
   }
 
-  // ============================================
+
   // UI
-  // ============================================
+
 
   return (
     <div className="space-y-6">

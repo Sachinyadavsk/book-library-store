@@ -493,7 +493,7 @@ const BookDetails = () => {
             <div className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
 
               <img
-                src={image}
+                src={book.images?.[0]}
                 alt={book.title || "Book"}
                 className="w-full h-[450px] sm:h-[550px] object-contain p-6"
                 onError={(e) => {
