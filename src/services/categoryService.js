@@ -1,42 +1,39 @@
 import api from "./api";
 
-// ============================================
 // CATEGORY SERVICE
-// ============================================
-
 const categoryService = {
-
-    // ============================================
     // GET ALL CATEGORIES
-    // ============================================
-
     async getCategories(params = {}) {
         const query = new URLSearchParams();
 
-        Object.entries(params).forEach(([key, value]) => {
-            if (
-                value !== undefined &&
-                value !== null &&
-                value !== ""
-            ) {
-                query.append(key, value);
+        Object.entries(params).forEach(
+            ([key, value]) => {
+                if (
+                    value !== undefined &&
+                    value !== null &&
+                    value !== ""
+                ) {
+                    query.append(key, value);
+                }
             }
-        });
+        );
 
-        const queryString = query.toString();
+        const queryString =
+            query.toString();
 
         return api(
-            `/category${queryString ? `?${queryString}` : ""}`,
+            `/category${queryString
+                ? `?${queryString}`
+                : ""
+            }`,
             {
                 method: "GET",
             }
         );
     },
 
-    // ============================================
-    // GET SINGLE CATEGORY
-    // ============================================
 
+    // GET SINGLE CATEGORY
     async getCategory(id) {
         if (!id) {
             throw new Error("Category ID is required");
@@ -47,9 +44,9 @@ const categoryService = {
         });
     },
 
-    // ============================================
+
     // SEARCH CATEGORIES
-    // ============================================
+
 
     async searchCategories(search) {
         if (!search) {
@@ -61,9 +58,9 @@ const categoryService = {
         });
     },
 
-    // ============================================
+
     // CREATE CATEGORY
-    // ============================================
+
 
     async createCategory(categoryData) {
         if (!categoryData) {
@@ -78,9 +75,9 @@ const categoryService = {
         });
     },
 
-    // ============================================
+
     // UPDATE CATEGORY
-    // ============================================
+
 
     async updateCategory(id, categoryData) {
         if (!id) {
@@ -95,9 +92,9 @@ const categoryService = {
         });
     },
 
-    // ============================================
+
     // DELETE CATEGORY
-    // ============================================
+
 
     async deleteCategory(id) {
         if (!id) {
@@ -111,9 +108,9 @@ const categoryService = {
         });
     },
 
-    // ============================================
+
     // UPDATE CATEGORY STATUS
-    // ============================================
+
 
     async updateStatus(id, status) {
         if (!id) {
