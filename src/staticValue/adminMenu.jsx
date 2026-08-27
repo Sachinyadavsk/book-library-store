@@ -6,12 +6,12 @@ const adminMenu = [
     },
     {
         name: "Books",
-        path: "/admin/books",
+        path: "/admin/books/books",
         icon: "📚",
     },
     {
         name: "Authors",
-        path: "/admin/authors",
+        path: "/admin/authors/authors",
         icon: "✍️",
     },
     {
@@ -21,7 +21,7 @@ const adminMenu = [
     },
     {
         name: "Users",
-        path: "/admin/users",
+        path: "/admin/users/users",
         icon: "👥",
     },
     {

@@ -60,10 +60,7 @@ const AdminLayout = () => {
               <span className="text-2xl">☰</span>
             </button>
             {/* Logo */}
-            <Link
-              to="/" target="_blank"
-              className="text-xl sm:text-2xl font-bold text-blue-600"
-            >
+            <Link to="/" target="_blank" className="text-xl sm:text-2xl font-bold text-blue-600">
               BookStore
             </Link>
           </div>
@@ -71,10 +68,7 @@ const AdminLayout = () => {
           {/* RIGHT */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* User */}
-            <Link
-              to="/admin/profile"
-              className="hidden sm:flex items-center gap-2"
-            >
+            <Link to="/admin/profile" className="hidden sm:flex items-center gap-2">
               <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                 👤
               </div>

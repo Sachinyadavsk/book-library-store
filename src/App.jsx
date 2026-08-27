@@ -34,18 +34,22 @@ import UserWishlist from "./pages/user/Wishlist";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
-import AdminBooks from "./pages/admin/Books";
-import AdminAuthors from "./pages/admin/Authors";
+import AdminBooks from "./pages/admin/Books/Books";
+import CreateBook from "./pages/admin/Books/CreateBook";
+import EditBook from "./pages/admin/Books/EditBook";
+import AdminAuthors from "./pages/admin/Authors/Authors";
 import AdminCategories from "./pages/admin/Categories";
-import AdminUsers from "./pages/admin/Users";
 import AdminOrders from "./pages/admin/Orders";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminRoute from "./routes/AdminRoute";
 import AdminProfile from "./pages/admin/Profile";
-import CreateBook from "./pages/admin/Books/CreateBook";
-import EditBook from "./pages/admin/Books/EditBook";
+import AdminUsers from "./pages/admin/Users/users";
+import CreateUser from "./pages/admin/Users/CreateUser";
+import EditUser from "./pages/admin/Users/EditUser";
+import CreateAuthor from "./pages/admin/Authors/CreateAuthor";
+import EditAuthor from "./pages/admin/Authors/EditAuthor";
 
 
 
@@ -92,15 +96,20 @@ const App = () => {
         {/* ==================== ADMIN ==================== */}
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/books" element={<AdminBooks />} />
-          <Route path="/admin/authors" element={<AdminAuthors />} />
+
+          <Route path="/admin/authors/authors" element={<AdminAuthors />} />
+          <Route path="/admin/authors/create" element={<CreateAuthor />} />
+          <Route path="/admin/authors/edit/:id" element={<EditAuthor />} />
           <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/create" element={<CreateUser />} />
+          <Route path="/admin/users/edit/:id" element={<EditUser />} />
+          <Route path="/admin/users/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/reviews" element={<AdminReviews />} />
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/books/books" element={<AdminBooks />} />
           <Route path="/admin/books/create" element={<CreateBook />} />
           <Route path="/admin/books/edit/:id" element={<EditBook />} />
         </Route>

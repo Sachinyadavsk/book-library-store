@@ -240,6 +240,12 @@ const Footer = () => {
               >
                 Support
               </Link>
+              <Link
+                to="/admin/login"
+                className="hover:text-white transition"
+              >
+                Maintain
+              </Link>
 
             </div>
 
