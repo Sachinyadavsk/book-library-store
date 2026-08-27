@@ -45,7 +45,7 @@ import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminRoute from "./routes/AdminRoute";
 import AdminProfile from "./pages/admin/Profile";
-import AdminUsers from "./pages/admin/Users/users";
+import AdminUsers from "./pages/admin/Users/UserAll";
 import CreateUser from "./pages/admin/Users/CreateUser";
 import EditUser from "./pages/admin/Users/EditUser";
 import CreateAuthor from "./pages/admin/Authors/CreateAuthor";
