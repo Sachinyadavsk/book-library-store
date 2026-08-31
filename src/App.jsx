@@ -50,6 +50,7 @@ import CreateUser from "./pages/admin/Users/CreateUser";
 import EditUser from "./pages/admin/Users/EditUser";
 import CreateAuthor from "./pages/admin/Authors/CreateAuthor";
 import EditAuthor from "./pages/admin/Authors/EditAuthor";
+import BorrowBooks from "./pages/admin/BorrowBooks";
 
 
 
@@ -112,6 +113,8 @@ const App = () => {
           <Route path="/admin/books/books" element={<AdminBooks />} />
           <Route path="/admin/books/create" element={<CreateBook />} />
           <Route path="/admin/books/edit/:id" element={<EditBook />} />
+          <Route path="/admin/borrow" element={<BorrowBooks />} />
+          
         </Route>
       </Route>
 
