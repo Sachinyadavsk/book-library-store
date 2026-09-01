@@ -22,54 +22,26 @@ const BookDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ==========================================
   // BOOK STATE
-  // ==========================================
-
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
-  // ==========================================
   // AUTH
-  // ==========================================
-
   const { user } = useAuth();
-
-  // ==========================================
   // CART
-  // ==========================================
-
-  const {
-    cart = [],
-    addToCart,
-    increaseQuantity,
-    decreaseQuantity,
-  } = useCart();
-
-  // ==========================================
+  const { cart = [], addToCart, increaseQuantity, decreaseQuantity, } = useCart();
   // WISHLIST
-  // ==========================================
-
-  const {
-    toggleWishlist,
-    isInWishlist,
-  } = useWishlist();
-
-  // ==========================================
+  const { toggleWishlist, isInWishlist, } = useWishlist();
   // GET SINGLE BOOK
-  // ==========================================
 
   useEffect(() => {
     let mounted = true;
-
     const fetchBook = async () => {
       try {
         setLoading(true);
         setError("");
         setBook(null);
-
         let response;
 
         // Preferred API
@@ -81,10 +53,7 @@ const BookDetails = () => {
         }
 
         console.log("Book API Response:", response);
-
-        // ======================================
         // NORMALIZE RESPONSE
-        // ======================================
 
         let bookData =
           response?.data ??
@@ -93,15 +62,9 @@ const BookDetails = () => {
           response?.books ??
           response;
 
-        // API may return:
-        // { data: { book: {...} } }
-
         if (bookData?.book) {
           bookData = bookData.book;
         }
-
-        // API may return:
-        // { data: [...] }
 
         if (Array.isArray(bookData)) {
           bookData = bookData.find(
@@ -112,7 +75,6 @@ const BookDetails = () => {
         }
 
         if (!mounted) return;
-
         if (bookData) {
           setBook(bookData);
         } else {
@@ -121,14 +83,9 @@ const BookDetails = () => {
         }
       } catch (err) {
         console.error("Get book error:", err);
-
         if (!mounted) return;
-
         setBook(null);
-        setError(
-          err?.message ||
-          "Unable to load book. Please try again."
-        );
+        setError(err?.message || "Unable to load book. Please try again.");
       } finally {
         if (mounted) {
           setLoading(false);
@@ -143,16 +100,13 @@ const BookDetails = () => {
       setBook(null);
       setError("Invalid book ID.");
     }
-
     return () => {
       mounted = false;
     };
   }, [id]);
 
-  // ==========================================
-  // LOADING
-  // ==========================================
 
+  // LOADING
   if (loading) {
     return (
       <div className="min-h-[70vh] bg-gray-50 flex items-center justify-center px-4">
@@ -162,7 +116,6 @@ const BookDetails = () => {
             spin
             className="text-4xl text-blue-600"
           />
-
           <p className="mt-4 text-gray-600">
             Loading book...
           </p>
@@ -171,27 +124,15 @@ const BookDetails = () => {
     );
   }
 
-  // ==========================================
   // BOOK NOT FOUND
-  // ==========================================
-
   if (!book) {
     return (
       <div className="min-h-[70vh] bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">
-            📚
-          </div>
-
-          <h1 className="text-2xl font-bold text-gray-800">
-            Book Not Found
-          </h1>
-
+          <div className="text-6xl mb-4">📚</div>
+          <h1 className="text-2xl font-bold text-gray-800">Book Not Found</h1>
           <p className="mt-2 text-gray-500">
-            {error ||
-              "The book you are looking for does not exist."}
-          </p>
-
+            {error || "The book you are looking for does not exist."}</p>
           <Link
             to="/books"
             className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
@@ -204,16 +145,9 @@ const BookDetails = () => {
     );
   }
 
-  // ==========================================
   // BOOK ID
-  // ==========================================
-
   const bookId = book.id ?? book._id;
-
-  // ==========================================
   // CART ITEM
-  // ==========================================
-
   const cartItem = Array.isArray(cart)
     ? cart.find(
       (item) =>
@@ -221,26 +155,18 @@ const BookDetails = () => {
         String(bookId)
     )
     : null;
-
   const inCart = Boolean(cartItem);
-
   const quantity = Number(
     cartItem?.quantity || 0
   );
 
-  // ==========================================
-  // WISHLIST
-  // ==========================================
 
+  // WISHLIST
   const inWishlist =
     typeof isInWishlist === "function"
       ? isInWishlist(bookId)
       : false;
-
-  // ==========================================
   // LOGIN REDIRECT
-  // ==========================================
-
   const requireLogin = (message) => {
     navigate("/login", {
       state: {
@@ -250,21 +176,16 @@ const BookDetails = () => {
     });
   };
 
-  // ==========================================
-  // ADD TO CART
-  // ==========================================
 
+  // ADD TO CART
   const handleAddToCart = async () => {
     if (!user) {
-      requireLogin(
-        "Please login to add books to your cart."
-      );
+      requireLogin("Please login to add books to your cart.");
       return;
     }
 
     try {
       setActionLoading(true);
-
       if (inCart) {
         await increaseQuantity(bookId);
       } else {
@@ -277,43 +198,29 @@ const BookDetails = () => {
     }
   };
 
-  // ==========================================
   // INCREASE QUANTITY
-  // ==========================================
-
   const handleIncrease = async () => {
     if (!user) {
-      requireLogin(
-        "Please login to update your cart."
-      );
+      requireLogin("Please login to update your cart.");
       return;
     }
-
     try {
       setActionLoading(true);
       await increaseQuantity(bookId);
     } catch (err) {
-      console.error(
-        "Increase quantity error:",
-        err
-      );
+      console.error("Increase quantity error:", err);
     } finally {
       setActionLoading(false);
     }
   };
 
-  // ==========================================
-  // DECREASE QUANTITY
-  // ==========================================
 
+  // DECREASE QUANTITY
   const handleDecrease = async () => {
     if (!user) {
-      requireLogin(
-        "Please login to update your cart."
-      );
+      requireLogin("Please login to update your cart.");
       return;
     }
-
     if (quantity <= 1) {
       return;
     }
@@ -322,88 +229,61 @@ const BookDetails = () => {
       setActionLoading(true);
       await decreaseQuantity(bookId);
     } catch (err) {
-      console.error(
-        "Decrease quantity error:",
-        err
-      );
+      console.error("Decrease quantity error:", err);
     } finally {
       setActionLoading(false);
     }
   };
 
-  // ==========================================
-  // BUY NOW
-  // ==========================================
 
+  // BUY NOW
   const handleBuyNow = async () => {
     if (!user) {
       navigate("/login", {
         state: {
           from: "/checkout",
-          message:
-            "Please login to continue checkout.",
+          message: "Please login to continue checkout.",
         },
       });
-
       return;
     }
-
     try {
       setActionLoading(true);
-
       // Add book if it isn't already in cart
       if (!inCart) {
         await addToCart(book);
       }
-
       // Go to checkout after cart operation
       navigate("/checkout");
     } catch (err) {
-      console.error(
-        "Buy now error:",
-        err
-      );
+      console.error("Buy now error:", err);
     } finally {
       setActionLoading(false);
     }
   };
 
-  // ==========================================
-  // WISHLIST
-  // ==========================================
 
+  // WISHLIST
   const handleWishlist = async () => {
     if (!user) {
-      requireLogin(
-        "Please login to manage your wishlist."
-      );
+      requireLogin("Please login to manage your wishlist.");
       return;
     }
-
     try {
       setActionLoading(true);
-
       await toggleWishlist(book);
     } catch (err) {
-      console.error(
-        "Wishlist error:",
-        err
-      );
+      console.error("Wishlist error:", err);
     } finally {
       setActionLoading(false);
     }
   };
 
-  // ==========================================
-  // RATING
-  // ==========================================
 
+  // RATING
   const rating = Number(book.rating || 0);
 
-  // ==========================================
   // IMAGE
-  // ==========================================
-
   const image =
     book.image ||
     book.coverImage ||
@@ -411,89 +291,43 @@ const BookDetails = () => {
     book.imageUrl ||
     "/images/book-placeholder.jpg";
 
-  // ==========================================
   // AUTHOR
-  // ==========================================
+  const author = typeof book.author === "object"
+    ? book.author?.name
+    : book.author;
 
-  const author =
-    typeof book.author === "object"
-      ? book.author?.name
-      : book.author;
-
-  // ==========================================
   // CATEGORY
-  // ==========================================
+  const category = typeof book.category === "object"
+    ? book.category?.name
+    : book.category;
 
-  const category =
-    typeof book.category === "object"
-      ? book.category?.name
-      : book.category;
-
-  // ==========================================
   // RENDER
-  // ==========================================
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* ======================================
-          BREADCRUMB
-      ====================================== */}
+      {/* BREADCRUMB */}
 
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-
           <div className="flex items-center gap-2 text-sm">
-
-            <Link
-              to="/"
-              className="text-gray-500 hover:text-blue-600"
-            >
-              Home
-            </Link>
-
-            <span className="text-gray-400">
-              /
-            </span>
-
-            <Link
-              to="/books"
-              className="text-gray-500 hover:text-blue-600"
-            >
-              Books
-            </Link>
-
-            <span className="text-gray-400">
-              /
-            </span>
-
+            <Link to="/" className="text-gray-500 hover:text-blue-600">Home</Link>
+            <span className="text-gray-400"> /</span>
+            <Link to="/books" className="text-gray-500 hover:text-blue-600">Books</Link>
+            <span className="text-gray-400"> /</span>
             <span className="text-gray-800 font-medium truncate">
               {book.title}
             </span>
-
           </div>
-
         </div>
       </div>
 
-      {/* ======================================
-          MAIN
-      ====================================== */}
-
+      {/* MAIN */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-
-          {/* ==================================
-              IMAGE
-          ================================== */}
-
+          {/* IMAGE */}
           <div>
-
             <div className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
-
-              <img
-                src={book.images?.[0]}
+              <img src={book.images?.[0]}
                 alt={book.title || "Book"}
                 className="w-full h-[450px] sm:h-[550px] object-contain p-6"
                 onError={(e) => {
@@ -504,7 +338,6 @@ const BookDetails = () => {
               />
 
               {/* CATEGORY */}
-
               {category && (
                 <span className="absolute top-4 left-4 px-4 py-1.5 bg-blue-600 text-white text-sm rounded-full">
                   {category}
@@ -512,7 +345,6 @@ const BookDetails = () => {
               )}
 
               {/* WISHLIST */}
-
               <button
                 type="button"
                 onClick={handleWishlist}
@@ -531,37 +363,21 @@ const BookDetails = () => {
                   icon={faHeart}
                 />
               </button>
-
             </div>
-
           </div>
 
-          {/* ==================================
-              BOOK INFORMATION
-          ================================== */}
-
+          {/* BOOK INFORMATION */}
           <div className="flex flex-col justify-center">
-
             {/* AUTHOR */}
-
             {author && (
-              <p className="text-blue-600 font-medium">
-                {author}
-              </p>
+              <p className="text-blue-600 font-medium">{author}</p>
             )}
 
             {/* TITLE */}
-
-            <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-gray-800">
-              {book.title}
-            </h1>
-
+            <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-gray-800">{book.title}</h1>
             {/* RATING */}
-
             <div className="flex items-center gap-3 mt-4">
-
               <div className="flex items-center gap-1 text-yellow-500">
-
                 {[1, 2, 3, 4, 5].map(
                   (star) => (
                     <FontAwesomeIcon
@@ -576,7 +392,6 @@ const BookDetails = () => {
                     />
                   )
                 )}
-
               </div>
 
               <span className="font-semibold text-gray-700">
@@ -584,13 +399,10 @@ const BookDetails = () => {
                   ? rating.toFixed(1)
                   : "No rating"}
               </span>
-
             </div>
 
             {/* PRICE */}
-
             <div className="flex items-center gap-3 mt-6">
-
               <span className="text-3xl font-bold text-blue-600">
                 ₹
                 {Number(
@@ -606,37 +418,27 @@ const BookDetails = () => {
                   ).toFixed(2)}
                 </span>
               )}
-
             </div>
 
             {/* DESCRIPTION */}
-
             <div className="mt-6">
-
               <h2 className="text-lg font-bold text-gray-800">
                 About this book
               </h2>
-
               <p className="mt-2 text-gray-600 leading-7">
                 {book.description ||
                   "Discover this wonderful book and explore an engaging reading experience from the author."}
               </p>
-
             </div>
 
-            {/* ==================================
-                CART QUANTITY
-            ================================== */}
+            {/* CART QUANTITY */}
 
             {inCart && (
               <div className="mt-6">
-
                 <p className="text-sm font-medium text-gray-700 mb-2">
                   Quantity
                 </p>
-
                 <div className="flex items-center w-fit border border-gray-300 rounded-xl overflow-hidden">
-
                   <button
                     type="button"
                     onClick={handleDecrease}
@@ -665,20 +467,13 @@ const BookDetails = () => {
                       icon={faPlus}
                     />
                   </button>
-
                 </div>
-
               </div>
             )}
 
-            {/* ==================================
-                ACTIONS
-            ================================== */}
-
+            {/* ACTIONS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7">
-
               {/* ADD CART */}
-
               <button
                 type="button"
                 onClick={handleAddToCart}
@@ -709,11 +504,9 @@ const BookDetails = () => {
                   : inCart
                     ? "Added to Cart"
                     : "Add to Cart"}
-
               </button>
 
               {/* BUY NOW */}
-
               <button
                 type="button"
                 onClick={handleBuyNow}
@@ -734,15 +527,10 @@ const BookDetails = () => {
                     />
                   </>
                 )}
-
               </button>
-
             </div>
 
-            {/* ==================================
-                WISHLIST
-            ================================== */}
-
+            {/* WISHLIST */}
             <button
               type="button"
               onClick={handleWishlist}
@@ -752,7 +540,6 @@ const BookDetails = () => {
                 : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                 } disabled:opacity-60`}
             >
-
               <FontAwesomeIcon
                 icon={faHeart}
               />
@@ -760,50 +547,34 @@ const BookDetails = () => {
               {inWishlist
                 ? "Remove from Wishlist"
                 : "Add to Wishlist"}
-
             </button>
 
-            {/* ==================================
-                GUEST MESSAGE
-            ================================== */}
-
+            {/* GUEST MESSAGE */}
             {!user && (
               <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-
                 <p className="text-sm text-blue-700">
                   Please login to add books to your
                   cart or wishlist and continue with
                   checkout.
                 </p>
-
               </div>
             )}
 
-            {/* ==================================
-                CART STATUS
-            ================================== */}
-
+            {/* CART STATUS */}
             {inCart && (
               <Link
                 to="/cart"
                 className="mt-5 flex items-center justify-center gap-2 text-blue-600 font-medium hover:text-blue-700"
               >
-
                 <FontAwesomeIcon
                   icon={faCartShopping}
                 />
-
                 View Cart
-
               </Link>
             )}
-
           </div>
-
         </div>
-
       </main>
-
     </div>
   );
 };

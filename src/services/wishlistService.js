@@ -1,14 +1,19 @@
+
 import api from "./api";
 
 const wishlistService = {
-    // Get logged-in user's wishlist
+    // ==========================================
+    // GET USER WISHLIST
+    // ==========================================
     getWishlist: () => {
         return api("/wishlist", {
             method: "GET",
         });
     },
 
-    // Add book
+    // ==========================================
+    // ADD BOOK TO WISHLIST
+    // ==========================================
     addToWishlist: (data) => {
         return api("/wishlist", {
             method: "POST",
@@ -16,8 +21,16 @@ const wishlistService = {
         });
     },
 
-    // Remove book
+    // ==========================================
+    // REMOVE BOOK FROM WISHLIST
+    // ==========================================
     removeFromWishlist: (id) => {
+        if (!id) {
+            return Promise.reject(
+                new Error("Wishlist item ID is required.")
+            );
+        }
+
         return api(`/wishlist/${id}`, {
             method: "DELETE",
         });
@@ -25,3 +38,4 @@ const wishlistService = {
 };
 
 export default wishlistService;
+

@@ -1,607 +1,520 @@
+
 import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useState,
 } from "react";
 
 import cartService from "../services/cartService";
 import { useAuth } from "./AuthContext";
 
-const CartContext = createContext();
+const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const { user } = useAuth();
+    const { user } = useAuth();
 
-  const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [error, setError] = useState("");
+    const [cart, setCart] = useState([]);
+    const [cartCount, setCartCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
+    // ==========================================
+    // GET CART
+    // ==========================================
 
-  // ==========================================
-  // GET BOOK ID
-  // ==========================================
-  const getBookId = (book) => {
-    if (!book) return null;
+    const loadCart = async () => {
+        if (!user) {
+            setCart([]);
+            setCartCount(0);
+            setError("");
+            return;
+        }
 
-    return (
-      book.book_id ??
-      book.bookId ??
-      book.book?.id ??
-      book.book?._id ??
-      book.id ??
-      book._id ??
-      null
-    );
-  };
+        try {
+            setLoading(true);
+            setError("");
 
+            const response =
+                await cartService.getCart();
 
-  // ==========================================
-  // NORMALIZE ID
-  // ==========================================
-  const normalizeId = (id) => {
-    if (
-      id === null ||
-      id === undefined
-    ) {
-      return "";
-    }
+            console.log(
+                "Cart API Response:",
+                response
+            );
 
-    return String(id);
-  };
+            /*
+             * YOUR API RESPONSE:
+             *
+             * {
+             *   success: true,
+             *   message: "Carts fetched successfully",
+             *   carts: [...]
+             * }
+             *
+             * Therefore we MUST use response.carts
+             */
 
+            const cartData = Array.isArray(
+                response?.carts
+            )
+                ? response.carts
+                : [];
 
-  // ==========================================
-  // FIND CART ITEM BY BOOK ID
-  // ==========================================
-  const findCartItem = (bookId) => {
-    const normalizedBookId =
-      normalizeId(bookId);
+            console.log(
+                "Cart Data:",
+                cartData
+            );
 
-    if (!normalizedBookId) {
-      return null;
-    }
+            setCart(cartData);
 
-    return (
-      cart.find((item) => {
+            // Total quantity
+            const totalQuantity =
+                cartData.reduce(
+                    (total, item) =>
+                        total +
+                        Number(
+                            item?.quantity ?? 1
+                        ),
+                    0
+                );
 
-        const itemBookId =
-          getBookId(item);
+            setCartCount(totalQuantity);
+        } catch (err) {
+            console.error(
+                "Get cart error:",
+                err
+            );
+
+            setCart([]);
+            setCartCount(0);
+
+            setError(
+                err?.response?.data?.message ||
+                    err?.message ||
+                    "Unable to load cart."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ==========================================
+    // LOAD CART WHEN USER CHANGES
+    // ==========================================
+
+    useEffect(() => {
+        loadCart();
+    }, [user]);
+
+    // ==========================================
+    // GET BOOK ID
+    // ==========================================
+
+    const getBookId = (item) => {
+        const book = item?.book ?? item;
 
         return (
-          normalizeId(itemBookId) ===
-          normalizedBookId
+            item?.book_id ??
+            book?.id ??
+            book?._id ??
+            null
         );
+    };
 
-      }) || null
-    );
-  };
+    // ==========================================
+    // GET CART ITEM ID
+    // ==========================================
 
-
-  // ==========================================
-  // GET CART
-  // ==========================================
-  const loadCart = async () => {
-
-    if (!user) {
-
-      setCart([]);
-      setCartCount(0);
-
-      return;
-    }
-
-    try {
-
-      setLoading(true);
-      setError("");
-
-      const response =
-        await cartService.getCart();
-
-      console.log(
-        "Cart API Response:",
-        response
-      );
-
-
-      // ----------------------------------------
-      // SUPPORT MULTIPLE API RESPONSE FORMATS
-      // ----------------------------------------
-
-      let cartData = [];
-
-      if (Array.isArray(response)) {
-
-        cartData = response;
-
-      } else if (
-        Array.isArray(response?.data)
-      ) {
-
-        cartData = response.data;
-
-      } else if (
-        Array.isArray(response?.cart)
-      ) {
-
-        cartData = response.cart;
-
-      } else if (
-        Array.isArray(response?.items)
-      ) {
-
-        cartData = response.items;
-
-      } else if (
-        Array.isArray(response?.data?.cart)
-      ) {
-
-        cartData =
-          response.data.cart;
-
-      } else if (
-        Array.isArray(response?.data?.items)
-      ) {
-
-        cartData =
-          response.data.items;
-
-      }
-
-
-      setCart(cartData);
-
-
-      // ----------------------------------------
-      // CART COUNT
-      // ----------------------------------------
-
-      const total =
-        cartData.reduce(
-          (sum, item) =>
-            sum +
-            Number(
-              item?.quantity || 1
-            ),
-          0
+    const getCartItemId = (item) => {
+        return (
+            item?.id ??
+            item?._id ??
+            item?.cart_id ??
+            item?.cartItemId ??
+            null
         );
-
-      setCartCount(total);
-
-    } catch (error) {
-
-      console.error(
-        "Get cart error:",
-        error
-      );
-
-      setCart([]);
-      setCartCount(0);
-
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to load cart."
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  };
-
-
-  // ==========================================
-  // LOAD WHEN USER CHANGES
-  // ==========================================
-  useEffect(() => {
-
-    loadCart();
-
-  }, [user]);
-
-
-  // ==========================================
-  // ADD TO CART
-  // ==========================================
-  const addToCart = async (book) => {
-
-    if (!user) {
-
-      return {
-        success: false,
-        requiresLogin: true,
-      };
-
-    }
-
-
-    const bookId =
-      getBookId(book);
-
-
-    if (!bookId) {
-
-      const error =
-        new Error(
-          "Book ID is missing."
-        );
-
-      console.error(
-        "Add to cart error:",
-        error
-      );
-
-      setError(
-        "Unable to add book to cart. Book ID is missing."
-      );
-
-      throw error;
-    }
-
-
-    try {
-
-      setError("");
-
-
-      const response =
-        await cartService.addToCart({
-          book_id: bookId,
-          quantity: 1,
-        });
-
-
-      console.log(
-        "Add Cart Response:",
-        response
-      );
-
-
-      await loadCart();
-
-
-      window.dispatchEvent(
-        new Event("cartUpdated")
-      );
-
-
-      return response;
-
-    } catch (error) {
-
-      console.error(
-        "Add cart error:",
-        error
-      );
-
-
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to add book to cart."
-      );
-
-
-      throw error;
-
-    }
-  };
-
-
-  // ==========================================
-  // INCREASE QUANTITY
-  // ==========================================
-  const increaseQuantity = async (
-    bookId
-  ) => {
-
-    const item =
-      findCartItem(bookId);
-
-
-    if (!item) {
-
-      console.warn(
-        "Cart item not found for book:",
-        bookId
-      );
-
-      return;
-
-    }
-
-
-    const cartId =
-      item.id ??
-      item.cart_id ??
-      item.cartId ??
-      item._id;
-
-
-    if (!cartId) {
-
-      console.error(
-        "Cart item ID missing:",
-        item
-      );
-
-      return;
-
-    }
-
-
-    const quantity =
-      Number(
-        item.quantity || 1
-      );
-
-
-    try {
-
-      await cartService.updateCart(
-        cartId,
-        {
-          quantity:
-            quantity + 1,
+    };
+
+    // ==========================================
+    // ADD TO CART
+    // ==========================================
+
+    const addToCart = async (book) => {
+        if (!user) {
+            return {
+                success: false,
+                requiresLogin: true,
+            };
         }
-      );
 
+        const bookId =
+            book?.id ?? book?._id;
 
-      await loadCart();
+        if (!bookId) {
+            const err = new Error(
+                "Book ID is required."
+            );
 
+            setError(err.message);
 
-      window.dispatchEvent(
-        new Event("cartUpdated")
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Increase quantity error:",
-        error
-      );
-
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to increase quantity."
-      );
-
-    }
-  };
-
-
-  // ==========================================
-  // DECREASE QUANTITY
-  // ==========================================
-  const decreaseQuantity = async (
-    bookId
-  ) => {
-
-    const item =
-      findCartItem(bookId);
-
-
-    if (!item) {
-
-      console.warn(
-        "Cart item not found for book:",
-        bookId
-      );
-
-      return;
-
-    }
-
-
-    const cartId =
-      item.id ??
-      item.cart_id ??
-      item.cartId ??
-      item._id;
-
-
-    if (!cartId) {
-
-      console.error(
-        "Cart item ID missing:",
-        item
-      );
-
-      return;
-
-    }
-
-
-    const quantity =
-      Number(
-        item.quantity || 1
-      );
-
-
-    // ----------------------------------------
-    // REMOVE WHEN QUANTITY REACHES ZERO
-    // ----------------------------------------
-
-    if (quantity <= 1) {
-
-      await removeFromCart(
-        cartId
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      await cartService.updateCart(
-        cartId,
-        {
-          quantity:
-            quantity - 1,
+            throw err;
         }
-      );
 
+        try {
+            setLoading(true);
+            setError("");
 
-      await loadCart();
+            await cartService.addToCart({
+                bookId: bookId,
+                quantity: 1,
+            });
 
+            await loadCart();
 
-      window.dispatchEvent(
-        new Event("cartUpdated")
-      );
+            window.dispatchEvent(
+                new Event("cartUpdated")
+            );
 
-    } catch (error) {
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                "Add to cart error:",
+                err
+            );
 
-      console.error(
-        "Decrease quantity error:",
-        error
-      );
+            setError(
+                err?.response?.data?.message ||
+                    err?.message ||
+                    "Unable to add item to cart."
+            );
 
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to decrease quantity."
-      );
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    }
-  };
+    // ==========================================
+    // REMOVE FROM CART
+    // ==========================================
 
+    const removeFromCart = async (
+        cartItemId
+    ) => {
+        if (!user) {
+            return {
+                success: false,
+                requiresLogin: true,
+            };
+        }
 
-  // ==========================================
-  // REMOVE FROM CART
-  // ==========================================
-  const removeFromCart = async (
-    cartId
-  ) => {
+        if (!cartItemId) {
+            const err = new Error(
+                "Cart item ID is required."
+            );
 
-    if (!cartId) {
-      return;
-    }
+            setError(err.message);
 
+            throw err;
+        }
 
-    try {
+        try {
+            setLoading(true);
+            setError("");
 
-      await cartService.removeFromCart(
-        cartId
-      );
+            await cartService.removeFromCart(
+                cartItemId
+            );
 
+            await loadCart();
 
-      await loadCart();
+            window.dispatchEvent(
+                new Event("cartUpdated")
+            );
 
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                "Remove cart error:",
+                err
+            );
 
-      window.dispatchEvent(
-        new Event("cartUpdated")
-      );
+            setError(
+                err?.response?.data?.message ||
+                    err?.message ||
+                    "Unable to remove item from cart."
+            );
 
-    } catch (error) {
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      console.error(
-        "Remove cart error:",
-        error
-      );
+    // ==========================================
+    // INCREASE QUANTITY
+    // ==========================================
 
+    const increaseQuantity = async (
+        bookId
+    ) => {
+        if (!user) {
+            return {
+                success: false,
+                requiresLogin: true,
+            };
+        }
 
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to remove item from cart."
-      );
+        if (!bookId) {
+            throw new Error(
+                "Book ID is required."
+            );
+        }
 
-    }
-  };
+        try {
+            setLoading(true);
+            setError("");
 
+            /*
+             * Find existing cart item
+             */
+            const existingItem =
+                cart.find(
+                    (item) =>
+                        String(
+                            getBookId(item)
+                        ) ===
+                        String(bookId)
+                );
 
-  // ==========================================
-  // CLEAR CART
-  // ==========================================
-  const clearCart = async () => {
+            if (!existingItem) {
+                throw new Error(
+                    "Cart item not found."
+                );
+            }
 
-    try {
+            const cartItemId =
+                getCartItemId(
+                    existingItem
+                );
 
-      await cartService.clearCart();
+            /*
+             * If your API has a dedicated
+             * quantity update endpoint,
+             * use it here.
+             *
+             * Otherwise use addToCart with
+             * the same book to increase quantity.
+             */
 
+            if (
+                typeof cartService.updateQuantity ===
+                "function"
+            ) {
+                await cartService.updateQuantity(
+                    cartItemId,
+                    getQuantity(
+                        existingItem
+                    ) + 1
+                );
+            } else {
+                await cartService.addToCart({
+                    book_id: bookId,
+                    quantity: 1,
+                });
+            }
 
-      setCart([]);
-      setCartCount(0);
+            await loadCart();
 
+            window.dispatchEvent(
+                new Event("cartUpdated")
+            );
 
-      window.dispatchEvent(
-        new Event("cartUpdated")
-      );
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                "Increase quantity error:",
+                err
+            );
 
-    } catch (error) {
+            setError(
+                err?.response?.data?.message ||
+                    err?.message ||
+                    "Unable to increase quantity."
+            );
 
-      console.error(
-        "Clear cart error:",
-        error
-      );
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    // ==========================================
+    // DECREASE QUANTITY
+    // ==========================================
 
-      setError(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Unable to clear cart."
-      );
+    const decreaseQuantity = async (
+        bookId
+    ) => {
+        if (!user) {
+            return {
+                success: false,
+                requiresLogin: true,
+            };
+        }
 
-    }
-  };
+        if (!bookId) {
+            throw new Error(
+                "Book ID is required."
+            );
+        }
 
+        try {
+            setLoading(true);
+            setError("");
 
-  // ==========================================
-  // CONTEXT
-  // ==========================================
-  return (
-    <CartContext.Provider
-      value={{
+            const existingItem =
+                cart.find(
+                    (item) =>
+                        String(
+                            getBookId(item)
+                        ) ===
+                        String(bookId)
+                );
+
+            if (!existingItem) {
+                throw new Error(
+                    "Cart item not found."
+                );
+            }
+
+            const currentQuantity =
+                getQuantity(
+                    existingItem
+                );
+
+            /*
+             * Never go below 1
+             */
+            if (currentQuantity <= 1) {
+                return {
+                    success: true,
+                };
+            }
+
+            const cartItemId =
+                getCartItemId(
+                    existingItem
+                );
+
+            /*
+             * Use dedicated update API
+             * if available.
+             */
+
+            if (
+                typeof cartService.updateQuantity ===
+                "function"
+            ) {
+                await cartService.updateQuantity(
+                    cartItemId,
+                    currentQuantity - 1
+                );
+            } else if (
+                typeof cartService.decreaseQuantity ===
+                "function"
+            ) {
+                await cartService.decreaseQuantity(
+                    cartItemId
+                );
+            } else {
+                console.warn(
+                    "No quantity update API found in cartService."
+                );
+            }
+
+            await loadCart();
+
+            window.dispatchEvent(
+                new Event("cartUpdated")
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                "Decrease quantity error:",
+                err
+            );
+
+            setError(
+                err?.response?.data?.message ||
+                    err?.message ||
+                    "Unable to decrease quantity."
+            );
+
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ==========================================
+    // GET QUANTITY
+    // ==========================================
+
+    const getQuantity = (item) => {
+        return Number(
+            item?.quantity ?? 1
+        );
+    };
+
+    // ==========================================
+    // CONTEXT VALUE
+    // ==========================================
+
+    const value = {
         cart,
         cartCount,
         loading,
         error,
 
-        addToCart,
-
-        increaseQuantity,
-
-        decreaseQuantity,
-
-        removeFromCart,
-
-        clearCart,
-
         loadCart,
 
-        findCartItem,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
-};
+        addToCart,
+        removeFromCart,
 
+        increaseQuantity,
+        decreaseQuantity,
+    };
+
+    return (
+        <CartContext.Provider
+            value={value}
+        >
+            {children}
+        </CartContext.Provider>
+    );
+};
 
 // ==========================================
 // USE CART
 // ==========================================
+
 export const useCart = () => {
+    const context =useContext(CartContext);
+    if (!context) {
+        throw new Error("useCart must be used inside CartProvider");
+    }
 
-  const context =
-    useContext(CartContext);
-
-
-  if (!context) {
-
-    throw new Error(
-      "useCart must be used inside CartProvider"
-    );
-
-  }
-
-
-  return context;
+    return context;
 };
+

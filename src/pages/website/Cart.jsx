@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -8,147 +9,235 @@ import {
     faTrash,
     faMinus,
     faPlus,
+    faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+
 const Cart = () => {
+    const { user } = useAuth();
+    const { cart = [], removeFromCart, increaseQuantity, decreaseQuantity, loading: cartLoading, } = useCart();
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    const [cart, setCart] = useState(() => {
-        return JSON.parse(localStorage.getItem("cart")) || [];
-    });
+    //  NORMALIZE CART DATA
+    const getCartId = (item) => {
+        return (item?.id ?? item?._id ?? item?.cart_id ?? item?.cartItemId
+        );
+    };
 
-    // Save cart whenever it changes
-    useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cart));
-        // Update navbar cart count
-        window.dispatchEvent(new Event("cartUpdated"));
-    }, [cart]);
+    const getBook = (item) => {
+        return item?.book ?? item;
+    };
 
-    // ============================================
+    const getBookId = (item) => {
+        const book = getBook(item);
+        return (item?.book_id ?? book?.id ?? book?._id);
+    };
+
+    const getTitle = (item) => {
+        const book = getBook(item);
+        return (item?.title ?? book?.title ?? "Untitled Book");
+    };
+
+    const getAuthor = (item) => {
+        const book = getBook(item);
+        const author = item?.author ?? book?.author;
+        if (typeof author === "object") {
+            return author?.name ?? "";
+        }
+        return author ?? "";
+    };
+
+    const getImage = (item) => {
+        const book = getBook(item);
+        return (
+            item?.image ??
+            item?.imageUrl ??
+            item?.coverImage ??
+            item?.cover ??
+            book?.image ??
+            book?.imageUrl ??
+            book?.coverImage ??
+            book?.cover ??
+            book?.images?.[0] ??
+            "/images/book-placeholder.jpg"
+        );
+    };
+
+    const getPrice = (item) => {
+        const book = getBook(item);
+        return Number(item?.price ?? book?.price ?? 0);
+    };
+
+    const getQuantity = (item) => {
+        return Number(item?.quantity ?? 1);
+    };
+
+    // CART TOTALS
+    const totalItems = cart.reduce((total, item) => total + getQuantity(item), 0);
+    const subtotal = cart.reduce((total, item) => total + getPrice(item) * getQuantity(item), 0);
+
+    // REMOVE ITEM
+    const handleRemoveItem = async (item) => {
+        try {
+            const cartItemId = getCartId(item);
+            if (!cartItemId) {
+                console.error("Cart item ID not found:", item);
+                return;
+            }
+
+            if (typeof removeFromCart !== "function") {
+                console.error("removeFromCart is not available in CartContext.");
+                return;
+            }
+            await removeFromCart(cartItemId);
+        } catch (error) {
+            console.error("Remove cart item error:", error);
+        }
+    };
+
+    //    INCREASE QUANTITY
+    const handleIncrease = async (item) => {
+        try {
+            const bookId = getBookId(item);
+            if (!bookId) {
+                console.error("Book ID not found:", item);
+                return;
+            }
+
+            if (typeof increaseQuantity !== "function") {
+                console.error("increaseQuantity is not available in CartContext.");
+                return;
+            }
+            await increaseQuantity(bookId);
+        } catch (error) {
+            console.error("Increase quantity error:", error);
+        }
+    };
+
+    // DECREASE QUANTITY
+    const handleDecrease = async (item) => {
+        try {
+            const bookId = getBookId(item);
+            const quantity = getQuantity(item);
+            if (!bookId) {
+                console.error("Book ID not found:", item);
+                return;
+            }
+
+            // Don't decrease below 1
+            if (quantity <= 1) {
+                return;
+            }
+
+            if (typeof decreaseQuantity !== "function") {
+                console.error("decreaseQuantity is not available in CartContext.");
+                return;
+            }
+            await decreaseQuantity(bookId);
+        } catch (error) {
+            console.error("Decrease quantity error:", error);
+        }
+    };
+
     // NOT LOGGED IN
-    // ============================================
+
     if (!user) {
         return (
             <div className="min-h-[70vh] bg-gray-50 flex items-center justify-center px-4">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center">
-
                     <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                         <FontAwesomeIcon
                             icon={faCartShopping}
                             className="text-3xl"
                         />
                     </div>
-
                     <h1 className="mt-6 text-2xl sm:text-3xl font-bold text-gray-800">
                         Your Cart
                     </h1>
-
                     <p className="mt-3 text-gray-500 text-sm sm:text-base leading-6">
                         Please login to your account to view your cart and
                         continue shopping.
                     </p>
-
                     <Link
                         to="/login"
                         className="mt-6 w-full flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
                     >
-                        <FontAwesomeIcon icon={faRightToBracket} />
+                        <FontAwesomeIcon
+                            icon={faRightToBracket}
+                        />
                         Login to Continue
                     </Link>
-
                     <Link
                         to="/books"
                         className="mt-3 w-full flex items-center justify-center gap-2 px-5 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition"
                     >
                         Continue Shopping
-                        <FontAwesomeIcon icon={faArrowRight} />
+                        <FontAwesomeIcon
+                            icon={faArrowRight}
+                        />
                     </Link>
                 </div>
             </div>
         );
     }
 
-    // ============================================
-    // CART TOTALS
-    // ============================================
-    const totalItems = cart.reduce(
-        (total, item) => total + (item.quantity || 1),
-        0
-    );
+    // LOADING
+    if (cartLoading && cart.length === 0) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="text-center">
 
-    const subtotal = cart.reduce(
-        (total, item) =>
-            total + Number(item.price || 0) * (item.quantity || 1),
-        0
-    );
-
-    // ============================================
-    // REMOVE ITEM
-    // ============================================
-    const removeItem = (id) => {
-        const updatedCart = cart.filter((item) => item.id !== id);
-        setCart(updatedCart);
-    };
-
-    // ============================================
-    // UPDATE QUANTITY
-    // ============================================
-    const updateQuantity = (id, quantity) => {
-        if (quantity < 1) {
-            removeItem(id);
-            return;
-        }
-
-        setCart(
-            cart.map((item) =>
-                item.id === id
-                    ? { ...item, quantity }
-                    : item
-            )
+                    <FontAwesomeIcon
+                        icon={faSpinner}
+                        spin
+                        className="text-4xl text-blue-600"
+                    />
+                    <p className="mt-4 text-gray-600">
+                        Loading cart...
+                    </p>
+                </div>
+            </div>
         );
-    };
+    }
 
-    // ============================================
+    // console.log("Cart Data:", cart);
+
     // EMPTY CART
-    // ============================================
     if (cart.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
-
                     <div className="mb-6">
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                             Shopping Cart
                         </h1>
-
                         <p className="mt-1 text-sm text-gray-500">
-                            Welcome back, {user.name || "User"}
+                            Welcome back,{" "}
+                            {user.name || "User"}
                         </p>
                     </div>
-
                     <div className="bg-white rounded-2xl shadow-sm p-8 sm:p-12 text-center">
-
                         <div className="w-20 h-20 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
                             <FontAwesomeIcon
                                 icon={faCartShopping}
                                 className="text-3xl text-gray-400"
                             />
                         </div>
-
                         <h2 className="mt-5 text-xl font-semibold text-gray-800">
                             Your cart is empty
                         </h2>
-
                         <p className="mt-2 text-gray-500">
                             Add some books to your cart and they will appear here.
                         </p>
-
                         <Link
                             to="/books"
                             className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
                         >
                             Browse Books
-                            <FontAwesomeIcon icon={faArrowRight} />
+                            <FontAwesomeIcon
+                                icon={faArrowRight}
+                            />
                         </Link>
                     </div>
                 </div>
@@ -156,26 +245,26 @@ const Cart = () => {
         );
     }
 
-    // ============================================
-    // CART WITH DATA
-    // ============================================
+    //  CART WITH DATA
+
     return (
         <div className="min-h-screen bg-gray-50">
-
             <div className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
-
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                             Shopping Cart
                         </h1>
-
                         <p className="mt-1 text-sm text-gray-500">
-                            {totalItems} {totalItems === 1 ? "item" : "items"} in your cart
+                            {totalItems}{" "}
+                            {totalItems === 1
+                                ? "item"
+                                : "items"}{" "}
+                            in your cart
                         </p>
-                    </div>
 
+                    </div>
                     <FontAwesomeIcon
                         icon={faCartShopping}
                         className="text-2xl text-blue-600"
@@ -183,120 +272,139 @@ const Cart = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    {/* ============================================
-                        CART ITEMS
-                    ============================================ */}
+                    {/* CART ITEMS */}
                     <div className="lg:col-span-2 space-y-4">
+                        {cart.map((item, index) => {
+                            const cartId = getCartId(item) ?? `${getBookId(item)}-${index}`;
+                            const bookId = getBookId(item);
+                            const title = getTitle(item);
+                            const author = getAuthor(item);
+                            const image = getImage(item);
+                            const price = getPrice(item);
+                            const quantity = getQuantity(item);
+                            return (
+                                <div key={cartId} className="bg-white rounded-2xl shadow-sm p-4 sm:p-5">
+                                    <div className="flex gap-4">
+                                        {/* Book Image */}
+                                        <div className="w-24 h-32 sm:w-28 sm:h-36 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                            <img
+                                                src={image}
+                                                alt={title}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.onerror =
+                                                        null;
 
-                        {cart.map((item) => (
-                            <div
-                                key={item.id}
-                                className="bg-white rounded-2xl shadow-sm p-4 sm:p-5"
-                            >
-                                <div className="flex gap-4">
-
-                                    {/* Book Image */}
-                                    <div className="w-24 h-32 sm:w-28 sm:h-36 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                                        <img
-                                            src={
-                                                item.image ||
-                                                "/images/book-placeholder.jpg"
-                                            }
-                                            alt={item.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-
-                                    {/* Book Details */}
-                                    <div className="flex-1 min-w-0">
-
-                                        <div className="flex justify-between gap-3">
-
-                                            <div>
-                                                <h2 className="font-semibold text-gray-800 text-base sm:text-lg">
-                                                    {item.title}
-                                                </h2>
-
-                                                {item.author && (
-                                                    <p className="text-sm text-gray-500 mt-1">
-                                                        By {item.author}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            {/* Delete */}
-                                            <button
-                                                type="button"
-                                                onClick={() => removeItem(item.id)}
-                                                className="text-red-500 hover:text-red-700 p-2"
-                                                title="Remove"
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
+                                                    e.currentTarget.src =
+                                                        "/images/book-placeholder.jpg";
+                                                }}
+                                            />
                                         </div>
 
-                                        {/* Price */}
-                                        <p className="mt-3 text-lg font-bold text-blue-600">
-                                            ₹{Number(item.price || 0).toFixed(2)}
-                                        </p>
+                                        {/* Book Details */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between gap-3">
+                                                <div>
+                                                    <h2 className="font-semibold text-gray-800 text-base sm:text-lg">
+                                                        {title}
+                                                    </h2>
+                                                    {author && (
+                                                        <p className="text-sm text-gray-500 mt-1">
+                                                            By{" "}
+                                                            {author}
+                                                        </p>
+                                                    )}
+                                                </div>
 
-                                        {/* Quantity */}
-                                        <div className="flex items-center justify-between mt-4">
-
-                                            <div className="flex items-center border border-gray-300 rounded-lg">
-
+                                                {/* Delete */}
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            (item.quantity || 1) - 1
-                                                        )
-                                                    }
-                                                    className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                                                >
-                                                    <FontAwesomeIcon icon={faMinus} />
+                                                    onClick={() => handleRemoveItem(item)}
+                                                    disabled={cartLoading}
+                                                    className="text-red-500 hover:text-red-700 p-2 disabled:opacity-50"
+                                                    title="Remove">
+                                                    <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-
-                                                <span className="w-10 text-center font-semibold">
-                                                    {item.quantity || 1}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            (item.quantity || 1) + 1
-                                                        )
-                                                    }
-                                                    className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                                                >
-                                                    <FontAwesomeIcon icon={faPlus} />
-                                                </button>
-
                                             </div>
 
-                                            {/* Item Total */}
-                                            <p className="font-bold text-gray-800">
-                                                ₹
-                                                {(
-                                                    Number(item.price || 0) *
-                                                    (item.quantity || 1)
-                                                ).toFixed(2)}
+                                            {/* Price */}
+                                            <p className="mt-3 text-lg font-bold text-blue-600">
+                                                ₹{price.toFixed(2)}
                                             </p>
 
+                                            {/* Quantity */}
+                                            <div className="flex items-center justify-between mt-4">
+                                                <div className="flex items-center border border-gray-300 rounded-lg">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDecrease(item)}
+                                                        disabled={cartLoading || quantity <= 1}
+                                                        className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                                                    >
+
+                                                        <FontAwesomeIcon
+                                                            icon={
+                                                                faMinus
+                                                            }
+                                                        />
+
+                                                    </button>
+
+                                                    <span className="w-10 text-center font-semibold">
+                                                        {quantity}
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleIncrease(
+                                                                item
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            cartLoading
+                                                        }
+                                                        className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                                                    >
+
+                                                        <FontAwesomeIcon
+                                                            icon={
+                                                                faPlus
+                                                            }
+                                                        />
+
+                                                    </button>
+
+                                                </div>
+
+                                                {/* Item Total */}
+
+                                                <p className="font-bold text-gray-800">
+                                                    ₹
+                                                    {(
+                                                        price *
+                                                        quantity
+                                                    ).toFixed(
+                                                        2
+                                                    )}
+                                                </p>
+
+                                            </div>
+
                                         </div>
+
                                     </div>
+
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
+
                     </div>
 
                     {/* ============================================
                         ORDER SUMMARY
                     ============================================ */}
+
                     <div className="lg:col-span-1">
 
                         <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 sticky top-24">
@@ -308,22 +416,41 @@ const Cart = () => {
                             <div className="mt-5 space-y-3">
 
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Items</span>
-                                    <span>{totalItems}</span>
+                                    <span>
+                                        Items
+                                    </span>
+
+                                    <span>
+                                        {totalItems}
+                                    </span>
                                 </div>
 
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Subtotal</span>
                                     <span>
-                                        ₹{subtotal.toFixed(2)}
+                                        Subtotal
+                                    </span>
+
+                                    <span>
+                                        ₹
+                                        {subtotal.toFixed(
+                                            2
+                                        )}
                                     </span>
                                 </div>
 
                                 <div className="border-t pt-4 flex justify-between text-lg font-bold text-gray-800">
-                                    <span>Total</span>
+
                                     <span>
-                                        ₹{subtotal.toFixed(2)}
+                                        Total
                                     </span>
+
+                                    <span>
+                                        ₹
+                                        {subtotal.toFixed(
+                                            2
+                                        )}
+                                    </span>
+
                                 </div>
 
                             </div>
@@ -333,7 +460,10 @@ const Cart = () => {
                                 className="mt-6 w-full flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
                             >
                                 Proceed to Checkout
-                                <FontAwesomeIcon icon={faArrowRight} />
+
+                                <FontAwesomeIcon
+                                    icon={faArrowRight}
+                                />
                             </Link>
 
                             <Link
@@ -344,12 +474,16 @@ const Cart = () => {
                             </Link>
 
                         </div>
+
                     </div>
 
                 </div>
+
             </div>
+
         </div>
     );
 };
 
 export default Cart;
+
