@@ -30,12 +30,26 @@ const Cart = () => {
     };
 
     const getBookId = (item) => {
-        const book = getBook(item);
-        return (item?.book_id ?? book?.id ?? book?._id);
-    };
+        if (!item) {
+            return null;
+        }
+
+        // book is already an ID string
+        if (typeof item.book === "string") {
+            return item.book;
+        }
+
+        // book is populated object
+        if (typeof item.book === "object") {
+            return item.book?._id ?? item.book?.id ?? null;
+        }
+
+        // fallback
+        return item.bookId ?? null;
+    }
 
     const getTitle = (item) => {
-        const book = getBook(item);
+        const book = getBook(item.items);
         return (item?.title ?? book?.title ?? "Untitled Book");
     };
 
@@ -51,14 +65,6 @@ const Cart = () => {
     const getImage = (item) => {
         const book = getBook(item);
         return (
-            item?.image ??
-            item?.imageUrl ??
-            item?.coverImage ??
-            item?.cover ??
-            book?.image ??
-            book?.imageUrl ??
-            book?.coverImage ??
-            book?.cover ??
             book?.images?.[0] ??
             "/images/book-placeholder.jpg"
         );
@@ -74,20 +80,36 @@ const Cart = () => {
     };
 
     // CART TOTALS
-    const totalItems = cart.reduce((total, item) => total + getQuantity(item), 0);
-    const subtotal = cart.reduce((total, item) => total + getPrice(item) * getQuantity(item), 0);
+    const cartItems = cart.flatMap(
+        (cartData) => cartData?.items ?? []
+    );
+
+    const totalItems = cartItems.reduce(
+        (total, item) =>
+            total + Number(item?.quantity ?? 1),
+        0
+    );
+
+    const subtotal = cartItems.reduce(
+        (total, item) =>
+            total +
+            Number(item?.price ?? 0) *
+            Number(item?.quantity ?? 1),
+        0
+    );
 
     // REMOVE ITEM
     const handleRemoveItem = async (item) => {
         try {
-            const cartItemId = getCartId(item);
+            const cartItemId = item?._id;
             if (!cartItemId) {
                 console.error("Cart item ID not found:", item);
                 return;
             }
-
             if (typeof removeFromCart !== "function") {
-                console.error("removeFromCart is not available in CartContext.");
+                console.error(
+                    "removeFromCart is not available in CartContext."
+                );
                 return;
             }
             await removeFromCart(cartItemId);
@@ -96,17 +118,14 @@ const Cart = () => {
         }
     };
 
-    //    INCREASE QUANTITY
+
+
     const handleIncrease = async (item) => {
         try {
             const bookId = getBookId(item);
+            console.log("Increase quantity for book ID:", bookId);
             if (!bookId) {
                 console.error("Book ID not found:", item);
-                return;
-            }
-
-            if (typeof increaseQuantity !== "function") {
-                console.error("increaseQuantity is not available in CartContext.");
                 return;
             }
             await increaseQuantity(bookId);
@@ -115,28 +134,22 @@ const Cart = () => {
         }
     };
 
-    // DECREASE QUANTITY
     const handleDecrease = async (item) => {
         try {
             const bookId = getBookId(item);
-            const quantity = getQuantity(item);
+
             if (!bookId) {
                 console.error("Book ID not found:", item);
                 return;
             }
 
-            // Don't decrease below 1
-            if (quantity <= 1) {
-                return;
-            }
-
-            if (typeof decreaseQuantity !== "function") {
-                console.error("decreaseQuantity is not available in CartContext.");
-                return;
-            }
             await decreaseQuantity(bookId);
+
         } catch (error) {
-            console.error("Decrease quantity error:", error);
+            console.error(
+                "Decrease quantity error:",
+                error
+            );
         }
     };
 
@@ -201,7 +214,7 @@ const Cart = () => {
         );
     }
 
-    // console.log("Cart Data:", cart);
+    console.log("Cart Data:", cart);
 
     // EMPTY CART
     if (cart.length === 0) {
@@ -274,130 +287,161 @@ const Cart = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* CART ITEMS */}
                     <div className="lg:col-span-2 space-y-4">
-                        {cart.map((item, index) => {
-                            const cartId = getCartId(item) ?? `${getBookId(item)}-${index}`;
-                            const bookId = getBookId(item);
-                            const title = getTitle(item);
-                            const author = getAuthor(item);
-                            const image = getImage(item);
-                            const price = getPrice(item);
-                            const quantity = getQuantity(item);
-                            return (
-                                <div key={cartId} className="bg-white rounded-2xl shadow-sm p-4 sm:p-5">
-                                    <div className="flex gap-4">
-                                        {/* Book Image */}
-                                        <div className="w-24 h-32 sm:w-28 sm:h-36 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                                            <img
-                                                src={image}
-                                                alt={title}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.currentTarget.onerror =
-                                                        null;
+                        {cart.length > 0 ? (
+                            cart.flatMap((cartData) =>
+                                (cartData?.items ?? []).map((item) => {
+                                    const cartId = item?._id ?? `${cartData?._id}-${item?.book}`;
+                                    const bookId =
+                                        typeof item?.book === "object"
+                                            ? item?.book?._id ?? item?.book?.id
+                                            : item?.book;
 
-                                                    e.currentTarget.src =
-                                                        "/images/book-placeholder.jpg";
-                                                }}
-                                            />
-                                        </div>
+                                    const title =
+                                        item?.title ??
+                                        item?.book?.title ??
+                                        "Untitled Book";
 
-                                        {/* Book Details */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between gap-3">
-                                                <div>
-                                                    <h2 className="font-semibold text-gray-800 text-base sm:text-lg">
-                                                        {title}
-                                                    </h2>
-                                                    {author && (
-                                                        <p className="text-sm text-gray-500 mt-1">
-                                                            By{" "}
-                                                            {author}
+                                    const author =
+                                        typeof item?.author === "object"
+                                            ? item?.author?.name ?? ""
+                                            : item?.author ?? item?.book?.author ?? "";
+
+                                    const image =
+                                        item?.images?.[0] ??
+                                        item?.image ??
+                                        item?.imageUrl ??
+                                        item?.book?.images?.[0] ??
+                                        item?.book?.image ??
+                                        "/images/book-placeholder.jpg";
+
+                                    const price = Number(item?.price ?? item?.book?.price ?? 0);
+
+                                    const quantity = Number(item?.quantity ?? 1);
+
+                                    return (
+                                        <div
+                                            key={cartId}
+                                            className="bg-white rounded-2xl shadow-sm p-4 sm:p-5"
+                                        >
+                                            <div className="flex gap-4">
+
+                                                {/* Book Image */}
+                                                <div className="w-24 h-32 sm:w-28 sm:h-36 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                                    <img
+                                                        src={image}
+                                                        alt={title}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.onerror = null;
+                                                            e.currentTarget.src =
+                                                                "/images/book-placeholder.jpg";
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* Book Details */}
+                                                <div className="flex-1 min-w-0">
+
+                                                    <div className="flex justify-between gap-3">
+
+                                                        <div>
+                                                            <h2 className="font-semibold text-gray-800 text-base sm:text-lg">
+                                                                {title}
+                                                            </h2>
+
+                                                            {author && (
+                                                                <p className="text-sm text-gray-500 mt-1">
+                                                                    By {author}
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Delete */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleRemoveItem(item)
+                                                            }
+                                                            disabled={cartLoading}
+                                                            className="text-red-500 hover:text-red-700 p-2 disabled:opacity-50"
+                                                            title="Remove"
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Price */}
+                                                    <p className="mt-3 text-lg font-bold text-blue-600">
+                                                        ₹{price.toFixed(2)}
+                                                    </p>
+
+                                                    {/* Quantity */}
+                                                    <div className="flex items-center justify-between mt-4">
+
+                                                        <div className="flex items-center border border-gray-300 rounded-lg">
+
+                                                            {/* Minus */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleDecrease(item)
+                                                                }
+                                                                disabled={
+                                                                    cartLoading ||
+                                                                    quantity <= 1
+                                                                }
+                                                                className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={faMinus}
+                                                                />
+                                                            </button>
+
+                                                            {/* Quantity */}
+                                                            <span className="w-10 text-center font-semibold">
+                                                                {quantity}
+                                                            </span>
+
+                                                            {/* Plus */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleIncrease(item)
+                                                                }
+                                                                disabled={cartLoading}
+                                                                className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={faPlus}
+                                                                />
+                                                            </button>
+
+                                                        </div>
+
+                                                        {/* Item Total */}
+                                                        <p className="font-bold text-gray-800">
+                                                            ₹{(price * quantity).toFixed(2)}
                                                         </p>
-                                                    )}
+
+                                                    </div>
                                                 </div>
-
-                                                {/* Delete */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveItem(item)}
-                                                    disabled={cartLoading}
-                                                    className="text-red-500 hover:text-red-700 p-2 disabled:opacity-50"
-                                                    title="Remove">
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
                                             </div>
-
-                                            {/* Price */}
-                                            <p className="mt-3 text-lg font-bold text-blue-600">
-                                                ₹{price.toFixed(2)}
-                                            </p>
-
-                                            {/* Quantity */}
-                                            <div className="flex items-center justify-between mt-4">
-                                                <div className="flex items-center border border-gray-300 rounded-lg">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDecrease(item)}
-                                                        disabled={cartLoading || quantity <= 1}
-                                                        className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-                                                    >
-
-                                                        <FontAwesomeIcon
-                                                            icon={
-                                                                faMinus
-                                                            }
-                                                        />
-
-                                                    </button>
-
-                                                    <span className="w-10 text-center font-semibold">
-                                                        {quantity}
-                                                    </span>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleIncrease(
-                                                                item
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            cartLoading
-                                                        }
-                                                        className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-                                                    >
-
-                                                        <FontAwesomeIcon
-                                                            icon={
-                                                                faPlus
-                                                            }
-                                                        />
-
-                                                    </button>
-
-                                                </div>
-
-                                                {/* Item Total */}
-
-                                                <p className="font-bold text-gray-800">
-                                                    ₹
-                                                    {(
-                                                        price *
-                                                        quantity
-                                                    ).toFixed(
-                                                        2
-                                                    )}
-                                                </p>
-
-                                            </div>
-
                                         </div>
+                                    );
+                                })
+                            )
+                        ) : (
+                            <div className="text-center py-10">
+                                <FontAwesomeIcon
+                                    icon={faCartShopping}
+                                    className="text-4xl text-gray-300 mb-3"
+                                />
 
-                                    </div>
-
-                                </div>
-                            );
-                        })}
+                                <p className="text-gray-500">
+                                    Your cart is empty.
+                                </p>
+                            </div>
+                        )}
 
                     </div>
 

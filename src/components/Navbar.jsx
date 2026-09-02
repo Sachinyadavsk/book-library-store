@@ -220,7 +220,7 @@ const Navbar = () => {
                     </div>
 
 
-                     {/* MOBILE BUTTON */}
+                    {/* MOBILE BUTTON */}
 
                     <button
                         type="button"
@@ -237,7 +237,7 @@ const Navbar = () => {
                 </div>
 
 
-               {/* MOBILE MENU */}
+                {/* MOBILE MENU */}
 
                 {isOpen && (
                     <div className="md:hidden border-t py-4">
@@ -262,7 +262,7 @@ const Navbar = () => {
 
 
                             <div className="border-t pt-3 mt-2">
-                               {/* CART */}
+                                {/* CART */}
                                 <Link
                                     to="/cart"
                                     onClick={closeMenu}
@@ -319,25 +319,27 @@ const Navbar = () => {
                                 ) : (
                                     <>
                                         {/* User Info */}
-                                        <div className="mx-4 mt-3 p-4 bg-gray-50 rounded-xl">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                                                    {displayName
-                                                        .charAt(0)
-                                                        .toUpperCase()}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-semibold text-gray-800 truncate">
-                                                        {displayName}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {isAdmin
-                                                            ? "Administrator"
-                                                            : "User Account"}
-                                                    </p>
+                                        <Link to={dashboardPath}>
+                                            <div className="mx-4 mt-3 p-4 bg-gray-50 rounded-xl">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                                        {displayName
+                                                            .charAt(0)
+                                                            .toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-gray-800 truncate">
+                                                            {displayName}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {isAdmin
+                                                                ? "Administrator"
+                                                                : "User Account"}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Link>
 
                                         {/* Logout */}
                                         <button

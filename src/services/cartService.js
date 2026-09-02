@@ -30,6 +30,7 @@ const cartService = {
             method: "DELETE",
         });
     },
+    
 
     // Clear cart
     clearCart: () => {
