@@ -8,6 +8,7 @@ import React, {
 
 import wishlistService from "../services/wishlistService";
 import { useAuth } from "./AuthContext";
+const API_URL = "https://book-library-store-api.onrender.com/api/v2";
 
 const WishlistContext = createContext(null);
 
@@ -77,6 +78,33 @@ export const WishlistProvider = ({ children }) => {
   useEffect(() => {
     loadWishlist();
   }, [user]);
+
+
+  const getBookById = async (bookId) => {
+    try {
+      if (!bookId) {
+        throw new Error("Book ID is required");
+      }
+
+      const response = await fetch(
+        `${API_URL}/book/${bookId}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Failed to fetch book"
+        );
+      }
+
+      return data.book;
+
+    } catch (error) {
+      console.error("Get Book By ID Error:", error);
+      return null;
+    }
+  };
 
   // ==========================================
   // GET BOOK ID
@@ -343,6 +371,7 @@ export const WishlistProvider = ({ children }) => {
     toggleWishlist,
 
     // Reload
+    getBookById,
     loadWishlist,
 
     // Error

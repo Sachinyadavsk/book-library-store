@@ -373,7 +373,7 @@ const CreateBook = () => {
             );
 
             setTimeout(() => {
-                navigate("/admin/books");
+                navigate("/admin/books/books");
             }, 1500);
 
         } catch (error) {

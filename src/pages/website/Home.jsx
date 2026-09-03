@@ -12,7 +12,6 @@ import {
   faHeart,
 } from "@fortawesome/free-solid-svg-icons";
 import categories from "../../staticValue/categoryData";
-import featuredBooks from "../../staticValue/featureData";
 import bookService from "../../services/bookService";
 import BookCard from "./BookCard";
 import bannerImage1 from "../../assets/banner/banner_home1.jpg";
@@ -21,28 +20,18 @@ const Home = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
         setError("");
         const response = await bookService.getBooks();
-        console.log("Books API Response:", response);
-        const bookData =
-          response?.data ||
-          response?.books ||
-          response?.results ||
-          [];
-        setBooks(
-          Array.isArray(bookData)
-            ? bookData
-            : []
-        );
+        const bookData = response?.books || [];
+        setBooks(Array.isArray(bookData) ? bookData : []);
       } catch (error) {
         console.error("Get books error:", error);
-        setError(error?.message || "Unable to load books."
-        );
+        setError(error?.message || "Unable to load books.");
         setBooks([]);
       } finally {
         setLoading(false);
@@ -52,7 +41,13 @@ const Home = () => {
   }, []);
 
 
-  console.log('dd',books);
+  // console.log('dd', books);
+  const featureseller = books.filter(
+    (book) => book.featured === true
+  );
+  const bestseller = books.filter(
+    (book) => book.featured === false
+  );
 
   return (
     <div className="bg-white">
@@ -61,7 +56,6 @@ const Home = () => {
           HERO SECTION
       ====================================================== */}
       <section className="bg-gradient-to-r from-white via-blue-50 to-white border-b">
-
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 items-center min-h-[460px] lg:min-h-[500px]">
             {/* Hero Content */}
@@ -204,7 +198,6 @@ const Home = () => {
         </div>
       </section>
 
-
       {/* =====================================================
           FEATURED BOOKS
       ====================================================== */}
@@ -225,7 +218,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {featuredBooks.map((book) => (
+          {featureseller.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -284,7 +277,7 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {books.map((book) => (
+            {bestseller.map((book) => (
               <BookCard
                 key={book._id}
                 book={book}
