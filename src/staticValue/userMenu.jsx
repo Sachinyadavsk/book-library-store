@@ -24,11 +24,6 @@
       path: "/user/wishlist",
       icon: "❤️",
     },
-    {
-      name: "Borrowed Books",
-      path: "/user/borrowed-books",
-      icon: "📚",
-    },
   ];
 
   export default userMenu;

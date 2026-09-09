@@ -34,7 +34,7 @@ const cartService = {
 
     // Clear cart
     clearCart: () => {
-        return api("/cart/clear", {
+        return api("/cart/", {
             method: "DELETE",
         });
     },

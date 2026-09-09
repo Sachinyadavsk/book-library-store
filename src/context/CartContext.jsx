@@ -255,12 +255,8 @@ export const CartProvider = ({ children }) => {
     // DECREASE QUANTITY
     const decreaseQuantity = async (bookId) => {
         if (!user) {
-            return {
-                success: false,
-                requiresLogin: true,
-            };
+            return { success: false, requiresLogin: true, };
         }
-
         if (!bookId) {
             throw new Error("Book ID is required.");
         }
@@ -268,95 +264,50 @@ export const CartProvider = ({ children }) => {
         try {
             setLoading(true);
             setError("");
-
             // Get all items from cart documents
-            const cartItems = cart.flatMap(
-                (cartData) => cartData?.items ?? []
-            );
-
+            const cartItems = cart.flatMap((cartData) => cartData?.items ?? []);
             console.log("Cart Items:", cartItems);
             console.log("Requested Book ID:", bookId);
-
             // Find cart item by Book ID
-            const existingItem = cartItems.find(
-                (item) =>
-                    String(getBookId(item)) ===
-                    String(bookId)
-            );
-
+            const existingItem = cartItems.find((item) => String(getBookId(item)) === String(bookId));
             console.log("Existing Cart Item:", existingItem);
-
             if (!existingItem) {
                 throw new Error("Cart item not found.");
             }
 
             // Current quantity
-            const currentQuantity =
-                getQuantity(existingItem);
-
-            console.log(
-                "Current Quantity:",
-                currentQuantity
-            );
+            const currentQuantity = getQuantity(existingItem);
+            console.log("Current Quantity:", currentQuantity);
 
             // Never go below 1
             if (currentQuantity <= 1) {
-                return {
-                    success: true,
-                    message: "Minimum quantity is 1",
-                };
+                return { success: true, message: "Minimum quantity is 1", };
             }
 
             // Cart item ID
-            const cartItemId =
-                getCartItemId(existingItem);
-
+            const cartItemId = getCartItemId(existingItem);
             if (!cartItemId) {
-                throw new Error(
-                    "Cart item ID not found."
-                );
+                throw new Error("Cart item ID not found.");
             }
 
-            console.log(
-                "Cart Item ID:",
-                cartItemId
-            );
+            console.log("Cart Item ID:", cartItemId);
 
             // New quantity
-            const newQuantity =
-                currentQuantity - 1;
-
-            console.log(
-                "New Quantity:",
-                newQuantity
-            );
+            const newQuantity = currentQuantity - 1;
+            console.log("New Quantity:", newQuantity);
 
             // Update quantity
-            if (
-                typeof cartService.updateQuantity ===
-                "function"
-            ) {
-                await cartService.updateQuantity(
-                    cartItemId,
-                    newQuantity
-                );
+            if (typeof cartService.updateQuantity === "function") {
+                await cartService.updateQuantity(cartItemId, newQuantity);
             } else {
-                throw new Error(
-                    "updateQuantity function not found in cartService."
-                );
+                throw new Error("updateQuantity function not found in cartService.");
             }
 
             // Reload cart
             await loadCart();
-
             // Notify other components
-            window.dispatchEvent(
-                new Event("cartUpdated")
-            );
-
-            return {
-                success: true,
-            };
+            window.dispatchEvent(new Event("cartUpdated"));
+            return { success: true, };
 
         } catch (err) {
             console.error(
@@ -391,6 +342,24 @@ export const CartProvider = ({ children }) => {
     // CONTEXT VALUE
     // ==========================================
 
+    const clearCart = async () => {
+        if (!user) return; try {
+            setLoading(true); setError("");
+            await cartService.clearCart();
+            // Clear local cart immediately 
+            setCart([]);
+            //  // Notify other components 
+            window.dispatchEvent(new Event("cartUpdated"));
+        }
+        catch (error) {
+            console.error("Clear Cart Error:", error);
+            setError(error?.message || "Unable to clear cart.");
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const value = {
         cart,
         cartCount,
@@ -398,7 +367,7 @@ export const CartProvider = ({ children }) => {
         error,
 
         loadCart,
-
+        clearCart,
         addToCart,
         removeFromCart,
 

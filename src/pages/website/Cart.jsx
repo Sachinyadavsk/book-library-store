@@ -214,8 +214,6 @@ const Cart = () => {
         );
     }
 
-    console.log("Cart Data:", cart);
-
     // EMPTY CART
     if (cart.length === 0) {
         return (

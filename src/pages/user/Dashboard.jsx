@@ -17,45 +17,29 @@ import { useWishlist } from "../../context/WishlistContext";
 const Dashboard = () => {
 
   const { user } = useAuth();
-  const { cart } = useCart();
+  const { cart = [], } = useCart();
   const { wishlistCount } = useWishlist();
 
-  const userName =
-    user?.name ||
-    user?.username ||
-    user?.email?.split("@")[0] ||
-    "User";
-
-  const cartCount = cart.reduce(
-    (total, item) =>
-      total + (Number(item.quantity) || 1),
+  const userName = user?.name || user?.username || user?.email?.split("@")[0] || "User"
+  const cartCount = cart.reduce((total, item) =>
+    total + (Number(item.quantity) || 1),
     0
   );
 
   return (
     <div className="space-y-6">
-
       {/* Welcome */}
       <div className="bg-blue-600 text-white rounded-2xl p-6 sm:p-8">
-
-        <p className="text-blue-100 text-sm">
-          Welcome back
-        </p>
-
-        <h1 className="mt-1 text-2xl sm:text-3xl font-bold">
-          Hi, {userName}! 👋
-        </h1>
-
+        <p className="text-blue-100 text-sm">Welcome back</p>
+        <h1 className="mt-1 text-2xl sm:text-3xl font-bold"> Hi, {userName}! 👋</h1>
         <p className="mt-2 text-blue-100">
           Manage your books, orders, cart and wishlist.
         </p>
-
       </div>
 
 
       {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
         {/* Books */}
         <Link
           to="/books"
@@ -63,23 +47,14 @@ const Dashboard = () => {
         >
 
           <div className="flex items-center justify-between">
-
             <div>
-              <p className="text-sm text-gray-500">
-                Books
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold text-gray-800">
-                Explore
-              </h2>
+              <p className="text-sm text-gray-500">Books</p>
+              <h2 className="mt-1 text-2xl font-bold text-gray-800">Explore</h2>
             </div>
-
             <div className="w-11 h-11 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
               <FontAwesomeIcon icon={faBook} />
             </div>
-
           </div>
-
         </Link>
 
 

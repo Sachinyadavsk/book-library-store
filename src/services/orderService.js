@@ -6,12 +6,10 @@ const orderService = {
     // CREATE ORDER
     // ============================================
     async createOrder(orderData) {
-
         if (!orderData) {
             throw new Error("Order data is required");
         }
-
-        return api("/orders", {
+        return api("/order/", {
             method: "POST",
             body: JSON.stringify(orderData),
         });
@@ -22,7 +20,7 @@ const orderService = {
     // ============================================
     async getMyOrders() {
 
-        return api("/orders/my", {
+        return api("/order/my-orders", {
             method: "GET",
         });
     },
@@ -36,7 +34,7 @@ const orderService = {
             throw new Error("Order ID is required");
         }
 
-        return api(`/orders/${orderId}`, {
+        return api(`/order/${orderId}`, {
             method: "GET",
         });
     },
