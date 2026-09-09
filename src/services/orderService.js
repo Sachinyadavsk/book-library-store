@@ -72,7 +72,7 @@ const orderService = {
     // ============================================
     async getAllOrders() {
 
-        return api("/admin/orders", {
+        return api("/order/", {
             method: "GET",
         });
     },
@@ -80,33 +80,25 @@ const orderService = {
     // ============================================
     // ADMIN - UPDATE ORDER STATUS
     // ============================================
-    async updateOrderStatus(
-        orderId,
-        status
-    ) {
-
-        if (!orderId) {
-            throw new Error(
-                "Order ID is required"
-            );
+    async updateOrderStatus(id, status) {
+        if (!id) {
+            throw new Error("Order ID is required");
         }
 
         if (!status) {
-            throw new Error(
-                "Order status is required"
-            );
+            throw new Error("Order status is required");
         }
-
-        return api(
-            `/admin/orders/${orderId}/status`,
+        return api(`/order/${id}/status`,
             {
-                method: "PATCH",
+                method: "PUT",
                 body: JSON.stringify({
                     status,
                 }),
             }
         );
     },
+
+
 
 };
 

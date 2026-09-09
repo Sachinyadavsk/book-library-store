@@ -153,19 +153,18 @@ const Orders = () => {
 
   // STATUS
   const getStatusClass = (status) => {
-    switch (String(status).toLowerCase()) {
-      case "delivered":
+    switch (String(status)) {
+      case "Delivered":
         return "bg-green-100 text-green-700";
-      case "shipped":
+      case "Shipped":
         return "bg-blue-100 text-blue-700";
-      case "processing":
+      case "Processing":
         return "bg-yellow-100 text-yellow-700";
-      case "cancelled":
-      case "canceled":
+      case "Cancelled":
         return "bg-red-100 text-red-700";
-      case "pending":
+      case "Pending":
         return "bg-orange-100 text-orange-700";
-      case "confirmed":
+      case "Confirmed":
         return "bg-green-100 text-green-700";
       default:
         return "bg-gray-100 text-gray-700";
@@ -178,14 +177,7 @@ const Orders = () => {
   const filteredOrders =
     filter === "All"
       ? orders
-      : orders.filter(
-        (order) =>
-          String(
-            order.status || "Pending"
-          ).toLowerCase() ===
-          filter.toLowerCase()
-      );
-
+      : orders.filter((order) => String(order.orderStatus || "Pending") === filter);
 
   // FORMAT DATE
   const formatDate = (date) => {
@@ -466,7 +458,7 @@ const Orders = () => {
         {filteredOrders.map(
           (order, index) => {
             const orderId = getOrderId(order);
-            const status = order.status || "Pending";
+            const status = order.orderStatus || "Pending";
             const items = Array.isArray(order.items)
               ? order.items
               : [];

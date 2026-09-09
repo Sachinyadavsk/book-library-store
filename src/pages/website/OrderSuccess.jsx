@@ -119,7 +119,7 @@ const OrderSuccess = () => {
         };
     }, [orderId]);
 
-   
+
 
     // LOADING
     if (loading) {
@@ -393,7 +393,7 @@ const OrderSuccess = () => {
                                 Order Status
                             </p>
                             <p className="mt-1 font-semibold text-green-700 capitalize">
-                                {order.status || "Confirmed"}
+                                {order.orderStatus || "Confirmed"}
                             </p>
                         </div>
                     </div>
