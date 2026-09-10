@@ -19,6 +19,7 @@ const Cart = () => {
     const { user } = useAuth();
     const { cart = [], removeFromCart, increaseQuantity, decreaseQuantity, loading: cartLoading, } = useCart();
 
+    console.log('cart details', cart);
     //  NORMALIZE CART DATA
     const getCartId = (item) => {
         return (item?.id ?? item?._id ?? item?.cart_id ?? item?.cartItemId
@@ -33,18 +34,12 @@ const Cart = () => {
         if (!item) {
             return null;
         }
-
-        // book is already an ID string
         if (typeof item.book === "string") {
             return item.book;
         }
-
-        // book is populated object
         if (typeof item.book === "object") {
             return item.book?._id ?? item.book?.id ?? null;
         }
-
-        // fallback
         return item.bookId ?? null;
     }
 
@@ -64,10 +59,7 @@ const Cart = () => {
 
     const getImage = (item) => {
         const book = getBook(item);
-        return (
-            book?.images?.[0] ??
-            "/images/book-placeholder.jpg"
-        );
+        return (book?.images?.[0] ?? "/images/book-placeholder.jpg");
     };
 
     const getPrice = (item) => {
@@ -118,8 +110,6 @@ const Cart = () => {
         }
     };
 
-
-
     const handleIncrease = async (item) => {
         try {
             const bookId = getBookId(item);
@@ -137,19 +127,13 @@ const Cart = () => {
     const handleDecrease = async (item) => {
         try {
             const bookId = getBookId(item);
-
             if (!bookId) {
                 console.error("Book ID not found:", item);
                 return;
             }
-
             await decreaseQuantity(bookId);
-
         } catch (error) {
-            console.error(
-                "Decrease quantity error:",
-                error
-            );
+            console.error("Decrease quantity error:", error);
         }
     };
 
@@ -289,21 +273,9 @@ const Cart = () => {
                             cart.flatMap((cartData) =>
                                 (cartData?.items ?? []).map((item) => {
                                     const cartId = item?._id ?? `${cartData?._id}-${item?.book}`;
-                                    const bookId =
-                                        typeof item?.book === "object"
-                                            ? item?.book?._id ?? item?.book?.id
-                                            : item?.book;
-
-                                    const title =
-                                        item?.title ??
-                                        item?.book?.title ??
-                                        "Untitled Book";
-
-                                    const author =
-                                        typeof item?.author === "object"
-                                            ? item?.author?.name ?? ""
-                                            : item?.author ?? item?.book?.author ?? "";
-
+                                    const bookId = typeof item?.book === "object" ? item?.book?._id ?? item?.book?.id : item?.book;
+                                    const title = item?.title ?? item?.book?.title ?? "Untitled Book";
+                                    const author = typeof item?.author === "object" ? item?.author?.name ?? "" : item?.author ?? item?.book?.author ?? "";
                                     const image =
                                         item?.images?.[0] ??
                                         item?.image ??

@@ -1,26 +1,47 @@
 import { faHeart, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
 import { useWishlist } from "../../context/WishlistContext"
+import api from '../../services/api';
 
 const BookCard = ({ book }) => {
-    const {
-        toggleWishlist,
-        isInWishlist,
-    } = useWishlist();
-
+    const { toggleWishlist, isInWishlist, } = useWishlist();
     const favorite = isInWishlist(book._id);
+    const [authorName, setAuthorName] = useState("Unknown Author");
+
+    useEffect(() => {
+        const getAuthor = async () => {
+            if (!book?.author) {
+                setAuthorName("Unknown Author");
+                return;
+            }
+            if (typeof book.author !== "string") {
+                setAuthorName("Unknown Author");
+                return;
+            } try {
+                const response = await api(`/author/${book.author}`, { method: "GET", });
+                console.log("Author API Response:", response);
+                if (response?.success && response?.author) {
+                    setAuthorName(response.author.name || response.author.authorName || response.author.fullName || "Unknown Author");
+                } else {
+                    setAuthorName("Unknown Author");
+                }
+            } catch (error) {
+                console.error("Get Author Error:", error);
+                setAuthorName("Unknown Author");
+            }
+        };
+        getAuthor();
+    }, [book?.author]);
+
     return (
         <div className="group min-w-0">
 
             {/* Image */}
             <div className="relative bg-gray-100 rounded-xl overflow-hidden">
-
                 <Link to={`/books/${book._id}`}>
-                    <img
-                        src={book.images?.[0]}
-                        alt={book.title}
+                    <img src={book.images?.[0]} alt={book.title}
                         className="w-full h-52 sm:h-60 object-cover group-hover:scale-105 transition duration-500"
                     />
                 </Link>
@@ -36,16 +57,11 @@ const BookCard = ({ book }) => {
                 >
                     <FontAwesomeIcon icon={faHeart} />
                 </button>
-
             </div>
 
             {/* Content */}
             <div className="pt-3">
-
-                <p className="text-[11px] text-gray-500 truncate">
-                    {book.author}
-                </p>
-
+                <p className="text-[11px] text-gray-500 truncate">{authorName}</p>
                 <Link to={`/books/${book._id}`}>
                     <h3 className="mt-1 text-sm font-semibold text-gray-800 truncate hover:text-blue-600">
                         {book.title}
@@ -53,22 +69,13 @@ const BookCard = ({ book }) => {
                 </Link>
 
                 <div className="flex items-center justify-between mt-2">
-
-                    <span className="font-bold text-gray-900 text-sm">
-                        ${book.price}
-                    </span>
-
+                    <span className="font-bold text-gray-900 text-sm">${book.price}</span>
                     <div className="flex items-center gap-1 text-yellow-500 text-xs">
                         <FontAwesomeIcon icon={faStar} />
-                        <span className="text-gray-500">
-                            {book.rating}
-                        </span>
+                        <span className="text-gray-500">{book.rating}</span>
                     </div>
-
                 </div>
-
             </div>
-
         </div>
     );
 };

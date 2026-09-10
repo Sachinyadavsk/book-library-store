@@ -17,6 +17,7 @@ import bookService from "../../services/bookService";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 const BookDetails = () => {
   const { id } = useParams();
@@ -35,6 +36,63 @@ const BookDetails = () => {
   const { toggleWishlist, isInWishlist, } = useWishlist();
   // GET SINGLE BOOK
 
+  const [authorName, setAuthorName] = useState("Unknown Author");
+  const [categoryName, setCategoryName] = useState("Unknown Category");
+
+  // category api
+  useEffect(() => {
+    const getCategory = async () => {
+      if (!book?.category) {
+        setCategoryName("Unknown Category");
+        return;
+      }
+      if (typeof book.category !== "string") {
+        setCategoryName("Unknown Category");
+        return;
+      } try {
+        const response = await api(`/category/${book.category}`, { method: "GET", });
+        console.log("Category API Response:", response);
+        if (response?.success && response?.category) {
+          setCategoryName(response.category.name || "Unknown Category");
+        } else {
+          setCategoryName("Unknown Category");
+        }
+      } catch (error) {
+        console.error("Get Category Error:", error);
+        setCategoryName("Unknown Category");
+      }
+    };
+    getCategory();
+  }, [book?.author]);
+
+  // author api
+
+  useEffect(() => {
+    const getAuthor = async () => {
+      if (!book?.author) {
+        setAuthorName("Unknown Author");
+        return;
+      }
+      if (typeof book.author !== "string") {
+        setAuthorName("Unknown Author");
+        return;
+      } try {
+        const response = await api(`/author/${book.author}`, { method: "GET", });
+        console.log("Author API Response:", response);
+        if (response?.success && response?.author) {
+          setAuthorName(response.author.name || "Unknown Author");
+        } else {
+          setAuthorName("Unknown Author");
+        }
+      } catch (error) {
+        console.error("Get Author Error:", error);
+        setAuthorName("Unknown Author");
+      }
+    };
+    getAuthor();
+  }, [book?.author]);
+
+
   useEffect(() => {
     let mounted = true;
     const fetchBook = async () => {
@@ -48,30 +106,16 @@ const BookDetails = () => {
         if (typeof bookService.getBookById === "function") {
           response = await bookService.getBookById(id);
         } else {
-          // Fallback
           response = await bookService.getBooks();
         }
-
-        console.log("Book API Response:", response);
-        // NORMALIZE RESPONSE
-
-        let bookData =
-          response?.data ??
-          response?.book ??
-          response?.result ??
-          response?.books ??
-          response;
-
+        // console.log("Book API Response:", response);
+        let bookData = response?.books ?? response;
         if (bookData?.book) {
           bookData = bookData.book;
         }
 
         if (Array.isArray(bookData)) {
-          bookData = bookData.find(
-            (item) =>
-              String(item?.id) === String(id) ||
-              String(item?._id) === String(id)
-          );
+          bookData = bookData.find((item) => String(item?._id) === String(id));
         }
 
         if (!mounted) return;
@@ -148,24 +192,16 @@ const BookDetails = () => {
   // BOOK ID
   const bookId = book.id ?? book._id;
   // CART ITEM
-  const cartItem = Array.isArray(cart)
-    ? cart.find(
-      (item) =>
-        String(item?.id ?? item?.bookId ?? item?._id) ===
-        String(bookId)
-    )
+  const cartItem = Array.isArray(cart) ? cart.find((item) =>
+    String(item?.id ?? item?.bookId ?? item?._id) === String(bookId)
+  )
     : null;
   const inCart = Boolean(cartItem);
-  const quantity = Number(
-    cartItem?.quantity || 0
-  );
-
+  const quantity = Number(cartItem?.quantity || 0);
 
   // WISHLIST
-  const inWishlist =
-    typeof isInWishlist === "function"
-      ? isInWishlist(bookId)
-      : false;
+  const inWishlist = typeof isInWishlist === "function" ? isInWishlist(bookId) : false;
+
   // LOGIN REDIRECT
   const requireLogin = (message) => {
     navigate("/login", {
@@ -175,7 +211,6 @@ const BookDetails = () => {
       },
     });
   };
-
 
   // ADD TO CART
   const handleAddToCart = async () => {
@@ -214,7 +249,6 @@ const BookDetails = () => {
     }
   };
 
-
   // DECREASE QUANTITY
   const handleDecrease = async () => {
     if (!user) {
@@ -235,7 +269,6 @@ const BookDetails = () => {
     }
   };
 
-
   // BUY NOW
   const handleBuyNow = async () => {
     if (!user) {
@@ -249,7 +282,6 @@ const BookDetails = () => {
     }
     try {
       setActionLoading(true);
-      // Add book if it isn't already in cart
       if (!inCart) {
         await addToCart(book);
       }
@@ -261,7 +293,6 @@ const BookDetails = () => {
       setActionLoading(false);
     }
   };
-
 
   // WISHLIST
   const handleWishlist = async () => {
@@ -279,30 +310,10 @@ const BookDetails = () => {
     }
   };
 
-
   // RATING
   const rating = Number(book.rating || 0);
 
-  // IMAGE
-  const image =
-    book.image ||
-    book.coverImage ||
-    book.cover ||
-    book.imageUrl ||
-    "/images/book-placeholder.jpg";
-
-  // AUTHOR
-  const author = typeof book.author === "object"
-    ? book.author?.name
-    : book.author;
-
-  // CATEGORY
-  const category = typeof book.category === "object"
-    ? book.category?.name
-    : book.category;
-
   // RENDER
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* BREADCRUMB */}
@@ -338,9 +349,9 @@ const BookDetails = () => {
               />
 
               {/* CATEGORY */}
-              {category && (
+              {categoryName && (
                 <span className="absolute top-4 left-4 px-4 py-1.5 bg-blue-600 text-white text-sm rounded-full">
-                  {category}
+                  {categoryName}
                 </span>
               )}
 
@@ -369,8 +380,8 @@ const BookDetails = () => {
           {/* BOOK INFORMATION */}
           <div className="flex flex-col justify-center">
             {/* AUTHOR */}
-            {author && (
-              <p className="text-blue-600 font-medium">{author}</p>
+            {authorName && (
+              <p className="text-blue-600 font-medium">{authorName}</p>
             )}
 
             {/* TITLE */}
